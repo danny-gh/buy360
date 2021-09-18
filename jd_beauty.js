@@ -163,6 +163,8 @@ async function mr() {
       client.send(`ping`)
       await $.wait(1000)
     }
+    client.send(`{"msg":{"type":"action","args":{},"action":"check_up"}}`)
+    await $.wait(1000)
     console.log('helpInfo', helpInfo);
     for (let help of helpInfo) {
       client.send(help);
@@ -244,7 +246,9 @@ async function mr() {
             if (!$.taskState.shop_view.includes(shop.id)) {
               count++;
               console.log(`去做关注店铺【${shop.name}】`);
+              await $.wait(1000);
               client.send(`{"msg":{"type":"action","args":{"shop_id":${shop.id}},"action":"shop_view"}}`);
+              await $.wait(1000);
               client.send(`{"msg":{"action":"write","type":"action","args":{"action_type":6,"channel":2,"source_app":2,"vender":"${shop.vender_id}"}}}`);
             }
             await $.wait(1000);
@@ -275,15 +279,17 @@ async function mr() {
         case "check_up":
           $.taskState = vo.data
           // 6-9点签到
-          for (let check_up of vo.data.check_up) {
-            if (check_up['receive_status'] !== 1) {
-              console.log(`去领取第${check_up.times}次签到奖励`)
-              client.send(`{"msg":{"type":"action","args":{"check_up_id":${check_up.id}},"action":"check_up_receive"}}`)
-            } else {
-              console.log(`第${check_up.times}次签到奖励已领取`)
+          if (vo.data.check_up != undefined && typeof (vo.data.check_up) != "undefined") {
+            for (let check_up of vo.data.check_up) {
+              if (check_up['receive_status'] !== 1) {
+                console.log(`去领取第${check_up.times}次签到奖励`)
+                client.send(`{"msg":{"type":"action","args":{"check_up_id":${check_up.id}},"action":"check_up_receive"}}`)
+              } else {
+                console.log(`第${check_up.times}次签到奖励已领取`)
+              }
             }
           }
-          break
+    break
         case 'newcomer_update':
           if (vo.code === '200' || vo.code === 200) {
             console.log(`第${vo.data.step}步新手任务完成成功，获得${vo.data.coins}美妆币`)
