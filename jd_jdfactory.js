@@ -44,10 +44,10 @@ if ($.isNode()) {
 }
 let wantProduct = ``;//心仪商品名称
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
-const inviteCodes = [``];
+$.inviteCodeList = [];
 let myInviteCode;
+let blackAccount = false;
 !(async () => {
-  await requireConfig();
   if (!cookiesArr[0]) {
     $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
     return;
@@ -70,8 +70,32 @@ let myInviteCode;
         }
         continue
       }
-      await shareCodesFormat();
       await jdFactory()
+    }
+  }
+  console.log('\n##################开始账号内互助#################\n');
+  for (let i = 0; i < cookiesArr.length; i++) {
+    if (cookiesArr[i]) {
+      cookie = cookiesArr[i];
+      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
+      blackAccount = false;
+      for (let k = 0; k < $.inviteCodeList.length; k++) {
+        $.oneCodeInfo = $.inviteCodeList[k];
+        if($.inviteCodeList[k].name === $.UserName){
+          continue;
+        } else {
+          console.log(`\n${$.UserName}去助力${$.inviteCodeList[k].name},助力码：${$.inviteCodeList[k].code}\n`);
+          const helpRes = await jdfactory_collectScore($.inviteCodeList[k].code);
+          if (helpRes.code === 0 && helpRes.data.bizCode === -7) {
+            console.log(`助力机会已耗尽，跳出`);
+            break
+          }
+          if (blackAccount) {
+            break;
+          }
+          await $.wait(2000);
+        }
+      }
     }
   }
 })()
@@ -84,7 +108,6 @@ let myInviteCode;
 async function jdFactory() {
   try {
     await jdfactory_getHomeData();
-    await helpFriends();
     // $.newUser !==1 && $.haveProduct === 2，老用户但未选购商品
     // $.newUser === 1新用户
     if ($.newUser === 1) return
@@ -240,21 +263,12 @@ async function algorithm() {
     })
   })
 }
-async function helpFriends() {
-  for (let code of $.newShareCodes) {
-    if (!code) continue
-    const helpRes = await jdfactory_collectScore(code);
-    if (helpRes.code === 0 && helpRes.data.bizCode === -7) {
-      console.log(`助力机会已耗尽，跳出`);
-      break
-    }
-  }
-}
 async function doTask() {
   if ($.taskVos && $.taskVos.length > 0) {
     batteryFull = false;
+    blackAccount = false;
     for (let item of $.taskVos) {
-      if(batteryFull){
+      if(batteryFull || blackAccount){
         break;
       }
       if (item.taskType === 1) {
@@ -338,19 +352,6 @@ async function doTask() {
           console.log(`${item.taskName}已做完`)
         }
       }
-      if (item.taskType === 21) {
-        //开通会员任务
-        if (item.status === 1) {
-          console.log(`此任务：${item.taskName}，跳过`);
-          // for (let task of item.brandMemberVos) {
-          //   if (task.status === 1) {
-          //     await jdfactory_collectScore(task.taskToken);
-          //   }
-          // }
-        } else {
-          console.log(`${item.taskName}已做完`)
-        }
-      }
       if (item.taskType === 13) {
         //每日打卡
         if (item.status === 1) {
@@ -377,6 +378,32 @@ async function doTask() {
           await jdfactory_collectScore(item.simpleRecordInfoVo.taskToken);
         } else {
           console.log(`${item.taskName}已完成`);
+        }
+      }
+      if (item.taskType === 21) {
+        //开通会员任务
+        if (item.status === 1) {
+          console.log(`此任务：${item.taskName}，跳过`);
+           for (let task of item.brandMemberVos) {
+             if (task.status === 1) {
+               await jdfactory_collectScore(task.taskToken);
+             }
+           }
+        } else {
+          console.log(`${item.taskName}已做完`)
+        }
+      }
+      if (item.taskType === 27) {
+        //"成功预约1次商品可得2000电量"
+        if (item.status === 1) {
+          console.log(`准备做此任务：${item.taskName}`);
+          for (let task of item.productInfoVos) {
+            if (task.status === 1) {
+              await jdfactory_collectScore(task.taskToken);
+            }
+          }
+        } else {
+          console.log(`${item.taskName}已做完`)
         }
       }
     }
@@ -407,6 +434,8 @@ function jdfactory_collectScore(taskToken, actionType = null) {
               console.log(`领取做完任务的奖励：${JSON.stringify(data.data.result)}`);
             } else if (data.data.bizCode === -7001) {
               batteryFull = true;
+            } else if (data.data.bizCode === -1001) {
+              blackAccount = true;
             } else {
               console.log(JSON.stringify(data))
             }
@@ -489,11 +518,17 @@ function jdfactory_getTaskDetail() {
                 if (item.taskType === 14) {
                   console.log(`\n【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】${item.assistTaskDetailVo.taskToken}\n`)
                   myInviteCode = item.assistTaskDetailVo.taskToken;
+                  $.inviteCodeList.push(
+                    {
+                      'name': $.UserName,
+                      'code': myInviteCode,
+                    }
+                  );
                   const submitCodeRes = submitCode();
                   if (submitCodeRes && submitCodeRes.code === 200) {
-                      console.log(`🏭东东工厂-互助码提交成功！🏭`);
-                  }else if (submitCodeRes.code === 300) {
-                      console.log(`🏭东东工厂-互助码已提交！🏭`);
+                    console.log(`🏭东东工厂-互助码提交成功！🏭`);
+                  } else if (submitCodeRes.code === 300) {
+                    console.log(`🏭东东工厂-互助码已提交！🏭`);
                   }
                 }
               })
@@ -664,30 +699,6 @@ function jdfactory_getHomeData() {
     })
   })
 }
-function readShareCode() {
-  console.log(`开始`)
-  return new Promise(async resolve => {
-    $.get({url: `http://www.helpu.cf/jdcodes/getcode.php?type=ddfactory&num=${randomCount}`, timeout: 10000}, (err, resp, data) => {
-      try {
-        if (err) {
-          console.log(`${JSON.stringify(err)}`)
-          console.log(`${$.name} API请求失败，请检查网路重试`)
-        } else {
-          if (data) {
-            console.log(`随机取${randomCount}个码放到您固定的互助码后面(不影响已有固定互助)`)
-            data = JSON.parse(data);
-          }
-        }
-      } catch (e) {
-        $.logErr(e, resp)
-      } finally {
-        resolve(data || {"code":500});
-      }
-    })
-    await $.wait(10000);
-    resolve({"code":500})
-  })
-}
 //提交互助码
 function submitCode() {
     return new Promise(async resolve => {
@@ -710,47 +721,6 @@ function submitCode() {
     })
     await $.wait(10000);
     resolve({"code":500})
-  })
-}
-//格式化助力码
-function shareCodesFormat() {
-  return new Promise(async resolve => {
-    // console.log(`第${$.index}个京东账号的助力码:::${$.shareCodesArr[$.index - 1]}`)
-    $.newShareCodes = [];
-    if ($.shareCodesArr[$.index - 1]) {
-      $.newShareCodes = $.shareCodesArr[$.index - 1].split('@');
-    } else {
-      console.log(`由于您第${$.index}个京东账号未提供shareCode,将采纳本脚本自带的助力码\n`)
-      const tempIndex = $.index > inviteCodes.length ? (inviteCodes.length - 1) : ($.index - 1);
-      $.newShareCodes = inviteCodes[tempIndex].split('@');
-    }
-      /*
-    const readShareCodeRes = await readShareCode();
-    if (readShareCodeRes && readShareCodeRes.code === 200) {
-      $.newShareCodes = [...new Set([...$.newShareCodes, ...(readShareCodeRes.data || [])])];
-    }
-    */
-    console.log(`第${$.index}个京东账号将要助力的好友${JSON.stringify($.newShareCodes)}`)
-    resolve();
-  })
-}
-function requireConfig() {
-  return new Promise(resolve => {
-    console.log(`开始获取${$.name}配置文件\n`);
-    //Node.js用户请在jdCookie.js处填写京东ck;
-    const shareCodes = $.isNode() ? require('./jdFactoryShareCodes.js') : '';
-    console.log(`共${cookiesArr.length}个京东账号\n`);
-    $.shareCodesArr = [];
-    if ($.isNode()) {
-      Object.keys(shareCodes).forEach((item) => {
-        if (shareCodes[item]) {
-          $.shareCodesArr.push(shareCodes[item])
-        }
-      })
-    }
-    // console.log(`\n种豆得豆助力码::${JSON.stringify($.shareCodesArr)}`);
-    console.log(`您提供了${$.shareCodesArr.length}个账号的${$.name}助力码\n`);
-    resolve()
   })
 }
 function taskPostUrl(function_id, body = {}, function_id2) {
