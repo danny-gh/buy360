@@ -12,7 +12,7 @@ exec("cd /ql/repo/danny-gh_buy360; git fetch --all; git reset --hard origin/main
 })
 
 if (__dirname.indexOf('/ql/') > -1) {
-  exec('ql repo git@github.com:danny-gh/buy360.git "jd_|jx_|getJDCookie" "activity|backUp|jd_delCoupon" "^jd[^_]|USER|utils"', (error, stdout, stderr) => {
+  exec('ql repo https://github.com/danny-gh/buy360.git "jd_|jx_|getJDCookie" "activity|backUp|jd_delCoupon" "^jd[^_]|USER|utils"', (error, stdout, stderr) => {
     console.log(1, error)
     console.log(2, stdout.trim())
     console.log(3, stderr)
