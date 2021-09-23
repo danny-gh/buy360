@@ -36,7 +36,6 @@ $.inviteCodeList = [];
 let cookiesArr = [];
 let UA, token, UAInfo = {}
 $.appId = 10028;
-$.helpCkList = [];
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
     cookiesArr.push(jdCookieNode[item])
@@ -79,38 +78,26 @@ if ($.isNode()) {
     UAInfo[$.UserName] = UA
   }
   console.log('\n##################开始账号内互助#################\n');
-  let newCookiesArr = [];
-  for(let i = 0; i < $.helpCkList.length; i += 4) {
-    newCookiesArr.push($.helpCkList.slice(i, i + 4))
-  }
-  for (let i = 0; i < newCookiesArr.length; i++) {
-    let thisCookiesArr = newCookiesArr[i];
-    let codeList = [];
-    for (let j = 0; j < thisCookiesArr.length; j++) {
-      $.cookie = thisCookiesArr[j];
-      $.UserName = decodeURIComponent($.cookie.match(/pt_pin=([^; ]+)(?=;?)/) && $.cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1]);
+  for (let i = 0; i < cookiesArr.length; i++) {
+    if (cookiesArr[i]) {
+      cookie = cookiesArr[i];
+      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
+      $.canHelp = true;
       for (let k = 0; k < $.inviteCodeList.length; k++) {
-        if ($.UserName === $.inviteCodeList[k].use) {
-          codeList.push({
-            'name': $.UserName,
-            'code': $.inviteCodeList[k].code
-          });
-        }
-      }
-    }
-    if (codeList.length < 4) { codeList = [...(codeList || []), ...([{"name":"code0","code":"g_eiitD1h9-a-PX-GytKiGrfw77E3iG0LpMlIb2JHcagr1SKhdGMrBwXetL4dQyTJpcY8pNkj3oyZE_VIBVsGQ"},{"name":"cod1","code":"g_eiitD1h9-a-PX-GytKiGrfw77E3iG0LpMlIb2JHcbODxiG0WyIYma2QJYusON8e4godlxEMJMxlxwtUjCsGQ"}])] }
-    for (let j = 0; j < thisCookiesArr.length; j++) {
-      $.cookie = thisCookiesArr[j];
-      $.UserName = decodeURIComponent($.cookie.match(/pt_pin=([^; ]+)(?=;?)/) && $.cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1]);
-      UA = UAInfo[$.UserName]
-      token = await getJxToken()
-      for (let k = 0; k < codeList.length; k++) {
-        $.oneCodeInfo = codeList[k];
-        if(codeList[k].name === $.UserName){
+        $.oneCodeInfo = $.inviteCodeList[k];
+        if($.oneCodeInfo.name === $.UserName){
+          console.log(`跳过自己`);
+          continue;
+        }else if($.oneCodeInfo.max === true){
+          console.log(`${$.oneCodeInfo.name}助力已满`);
           continue;
         } else {
-          console.log(`\n${$.UserName}去助力${codeList[k].name},助力码：${codeList[k].code}\n`);
+          console.log(`\n${$.UserName}去助力${$.oneCodeInfo.name},助力码：${$.oneCodeInfo.code}\n`);
           await takeGetRequest('help');
+          if ($.canHelp === false ) {
+            console.log(`助力机会已耗尽，跳出`);
+            break
+          }
           await $.wait(2000);
         }
       }
@@ -139,10 +126,9 @@ async function pasture() {
       }
       console.log('获取活动信息成功');
       console.log(`互助码：${$.homeInfo.sharekey}`);
-      $.helpCkList.push($.cookie);
       $.inviteCodeList.push(
         {
-          'use':$.UserName,
+          'name':$.UserName,
           'code':$.homeInfo.sharekey,
           'max':false
         }
@@ -184,6 +170,9 @@ async function pasture() {
       await takeGetRequest('cow');
       await $.wait(2000);
     }
+    await feedCabbage();
+    await mowing();
+    await chickenLeg();
     $.taskList = [];
     $.dateType = ``;
     for (let j = 2; j >= 0; j--) {
@@ -196,91 +185,82 @@ async function pasture() {
       await $.wait(2000);
       await doTask(j);
       await $.wait(2000);
-      if (j === 2) {
-        //割草
-        console.log(`\n开始进行割草`);
-        $.runFlag = true;
-        for (let i = 0; i < 30 && $.runFlag; i++) {
-          $.mowingInfo = {};
-          console.log(`开始第${i + 1}次割草`);
-          await takeGetRequest('mowing');
-          await $.wait(2000);
-          if ($.mowingInfo.surprise === true) {
-            //除草礼盒
-            console.log(`领取除草礼盒`);
-            await takeGetRequest('GetSelfResult');
-            await $.wait(3000);
-          }
-        }
-
-        //横扫鸡腿
-        $.runFlag = true;
-        console.log(`\n开始进行横扫鸡腿`);
-        for (let i = 0; i < 30 && $.runFlag; i++) {
-          console.log(`开始第${i + 1}次横扫鸡腿`);
-          await takeGetRequest('jump');
-          await $.wait(2000);
-        }
-      }
-    }
-    await takeGetRequest('GetHomePageInfo');
-    await $.wait(2000);
-    let materialNumber = 0;
-    let materialinfoList = $.homeInfo.materialinfo;
-    for (let j = 0; j < materialinfoList.length; j++) {
-      if (materialinfoList[j].type !== 1) {
-        continue;
-      }
-      materialNumber = Number(materialinfoList[j].value);//白菜数量
-    }
-    if (Number($.homeInfo.coins) > 5000) {
-      let canBuyTimes = Math.floor(Number($.homeInfo.coins) / 5000);
-      console.log(`\n共有金币${$.homeInfo.coins},可以购买${canBuyTimes}次白菜`);
-      if(Number(materialNumber) < 400){
-        for (let j = 0; j < canBuyTimes && j < 4; j++) {
-          console.log(`第${j + 1}次购买白菜`);
-          await takeGetRequest('buy');
-          await $.wait(2000);
-        }
-        await takeGetRequest('GetHomePageInfo');
-        await $.wait(2000);
-      }else{
-        console.log(`现有白菜${materialNumber},大于400颗,不进行购买`);
-      }
-    }else{
-      console.log(`\n共有金币${$.homeInfo.coins}`);
-    }
-    materialinfoList = $.homeInfo.materialinfo;
-    for (let j = 0; j < materialinfoList.length; j++) {
-      if (materialinfoList[j].type !== 1) {
-        continue;
-      }
-      if (Number(materialinfoList[j].value) > 10) {
-        $.canFeedTimes = Math.floor(Number(materialinfoList[j].value) / 10);
-        console.log(`\n共有白菜${materialinfoList[j].value}颗，每次喂10颗，可以喂${$.canFeedTimes}次`);
-        $.runFeed = true;
-        for (let k = 0; k < $.canFeedTimes && $.runFeed && k < 40; k++) {
-          $.pause = false;
-          console.log(`开始第${k + 1}次喂白菜`);
-          await takeGetRequest('feed');
-          await $.wait(4000);
-          if ($.pause) {
-            await takeGetRequest('GetHomePageInfo');
-            await $.wait(1000);
-            for (let n = 0; n < $.homeInfo.petinfo.length; n++) {
-              $.onepetInfo = $.homeInfo.petinfo[n];
-              if ($.onepetInfo.cangetborn === 1) {
-                console.log(`开始收鸡蛋`);
-                await takeGetRequest('GetEgg');
-                await $.wait(1000);
-              }
-            }
-          }
-        }
-      }
     }
   } catch (e) {
     $.logErr(e)
+  }
+}
+
+async function mowing() {
+  //割草
+  let i = 0;
+  console.log(`\n开始进行割草`);
+  $.runFlag = true;
+  while($.runFlag){
+    $.mowingInfo = {};
+    console.log(`开始第${i++}次割草`);
+    await takeGetRequest('mowing');
+    await $.wait(1000);
+    if ($.mowingInfo.surprise === true) {
+      //除草礼盒
+      console.log(`领取除草礼盒`);
+      await takeGetRequest('GetSelfResult');
+      await $.wait(3000);
+    }
+  }
+}
+
+async function chickenLeg() {
+  //横扫鸡腿
+  let i = 0;
+  $.runFlag = true;
+  console.log(`\n开始进行横扫鸡腿`);
+  while($.runFlag){
+    console.log(`开始第${i++}次横扫鸡腿`);
+    await takeGetRequest('jump');
+    await $.wait(2000);
+  }
+}
+
+async function feedCabbage() {
+  let k = 0;
+  $.cabbageCount = 0;
+  $.coinCount = 0;
+  await takeGetRequest('GetHomePageInfo');
+  await $.wait(2000);
+  if ($.cabbageCount < 10 && $.coinCount >= 5000) {
+    await takeGetRequest('buy');
+    await $.wait(1000);
+    await takeGetRequest('GetHomePageInfo');
+    await $.wait(1000);
+  }
+  while ($.cabbageCount > 10) {
+    $.pause = false;
+    $.runFeed = true;
+    console.log(`开始第${k++}次喂白菜`);
+    await takeGetRequest('feed');
+    await $.wait(1000);
+    await takeGetRequest('GetHomePageInfo');
+    await $.wait(1000);
+    if ($.runFeed == false) {
+      break;
+    }
+    if ($.pause) {
+      for (let n = 0; n < $.homeInfo.petinfo.length; n++) {
+        $.onepetInfo = $.homeInfo.petinfo[n];
+        if ($.onepetInfo.cangetborn === 1) {
+          console.log(`开始收鸡蛋`);
+          await takeGetRequest('GetEgg');
+          await $.wait(1000);
+        }
+      }
+    }
+    if ($.cabbageCount < 10 && $.coinCount >= 5000) {
+      await takeGetRequest('buy');
+      await $.wait(1000);
+      await takeGetRequest('GetHomePageInfo');
+      await $.wait(1000);
+    }
   }
 }
 
@@ -470,8 +450,13 @@ function dealReturn(type, data) {
             console.log(`未获得金币暂停${type}`);
           }
         }
+      } else if (data.ret === 1014) {
+        $.runFlag = true;
+        console.log(`${type}异常：${JSON.stringify(data)}\n`);
+        $.wait(1000);
       } else {
-        console.log(`cow 数据异常：${data}\n`);
+        $.runFlag = false;
+        console.log(`${type}异常：${JSON.stringify(data)}\n`);
       }
       break;
     case 'GetSelfResult':
@@ -479,48 +464,72 @@ function dealReturn(type, data) {
       if (data.ret === 0) {
         console.log(`打开除草礼盒成功`);
         console.log(JSON.stringify(data));
+      } else {
+        console.log(`${type}异常：${JSON.stringify(data)}\n`);
       }
       break;
     case 'GetUserTaskStatusList':
       data = JSON.parse(data);
       if (data.ret === 0) {
         $.taskList = data.data.userTaskStatusList;
+        //console.log(JSON.stringify($.taskList )+'\n\n');
+      }else{
+        console.log(`${type}异常：${JSON.stringify(data)}\n`);
       }
       break;
     case 'Award':
       data = JSON.parse(data);
       if (data.ret === 0) {
         console.log(`领取金币成功，获得${JSON.parse(data.data.prizeInfo).prizeInfo}`);
+      }else{
+        console.log(`${type}异常：${JSON.stringify(data)}\n`);
       }
       break;
     case 'buy':
       data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
       if (data.ret === 0) {
         console.log(`购买成功，当前有白菜：${data.data.newnum}颗`);
+      }else{
+        console.log(`购买白菜异常：${JSON.stringify(data)}\n`);
       }
       break;
     case 'feed':
       data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
-      if (data.ret === 0) {
-        console.log(`投喂成功`);
-      } else if (data.ret === 2020) {
-        console.log(`投喂失败，需要先收取鸡蛋`);
-        $.pause = true;
-      } else {
-        console.log(`投喂失败，${data.message}`);
-        console.log(JSON.stringify(data));
-        $.runFeed = false;
+      switch(data.ret){
+        case 0:
+          console.log(`投喂成功`);
+          break;
+        case 1010:  //系统失联
+        case 1014:  //手速太快
+          console.log(`投喂失败，${data.message}`);
+          $.wait(1000);
+          break;
+        case 2020:  //先收蛋
+          $.pause = true;
+          console.log(`投喂失败，${data.message}`);
+          $.wait(1000);
+          break;
+        case 2005:  //吃太多
+        default:
+          $.runFeed = false;
+          console.log(`投喂失败，${JSON.stringify(data)}`);
+          $.wait(1000);
+          break;
       }
       break;
     case 'GetEgg':
       data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
       if (data.ret === 0) {
         console.log(`成功收取${data.data.addnum}个蛋，现有鸡蛋${data.data.newnum}个`);
+      }else{
+        console.log(`${type}异常：${JSON.stringify(data)}\n`);
       }
       break;
     case 'DoTask':
       if (data.ret === 0) {
         console.log(`执行任务成功`);
+      }else{
+        console.log(`${type}异常：${JSON.stringify(data)}\n`);
       }
       break;
     case 'help':
@@ -535,12 +544,15 @@ function dealReturn(type, data) {
         $.oneCodeInfo.max = true;
       }else{
         console.log(JSON.stringify(data))
+        $.canHelp = false;
       }
       break;
     case 'GetVisitBackInfo':
       data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
       if (data.ret === 0) {
         $.GetVisitBackInfo = data.data;
+      } else {
+        console.log(`${type}异常：${JSON.stringify(data)}\n`);
       }
       //console.log(JSON.stringify(data));
       break;
@@ -548,22 +560,29 @@ function dealReturn(type, data) {
       data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
       if (data.ret === 0) {
         console.log(`收取白菜成功，获得${data.data.drawnum}`);
+      } else {
+        console.log(`${type}异常：${JSON.stringify(data)}\n`);
       }
       break;
     case 'GetSignInfo':
       data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
       if (data.ret === 0) {
         $.GetSignInfo = data.data;
+      } else {
+        console.log(`${type}异常：${JSON.stringify(data)}\n`);
       }
       break;
     case 'GetSignReward':
       data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
       if (data.ret === 0) {
         console.log(`签到成功`);
+      } else {
+        console.log(`${type}异常：${JSON.stringify(data)}\n`);
       }
       break;
     default:
-      console.log(JSON.stringify(data));
+      console.log(`${type}异常：${JSON.stringify(data)}\n`);
+      //console.log(JSON.stringify(data));
   }
 }
 

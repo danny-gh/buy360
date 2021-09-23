@@ -80,7 +80,6 @@ let blackAccount = false;
       $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
       blackAccount = false;
       for (let k = 0; k < $.inviteCodeList.length; k++) {
-        $.oneCodeInfo = $.inviteCodeList[k];
         if($.inviteCodeList[k].name === $.UserName){
           continue;
         } else {
