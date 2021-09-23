@@ -5,6 +5,11 @@
 更新时间：2021-06-07
 已支持IOS双京东账号,Node.js支持N个京东账号
 脚本兼容: QuantumultX, Surge, Loon, JSBox, Node.js
+[task_local]
+#签到领现金
+32 0,1,2 * * * jd_cash.js, tag=签到领现金, , enabled=true
+================Loon==============
+[Script]
 cron "32 0,1,2 * * *" jd_cash.js
  */
 const $ = new Env('签到领现金');
@@ -14,7 +19,6 @@ const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 let jdNotify = true;//是否关闭通知，false打开通知推送，true关闭通知推送
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '', message;
-let helpAuthor = true;
 const randomCount = $.isNode() ? 5 : 5;
 let cash_exchange = false;//是否消耗2元红包兑换200京豆，默认否
 const inviteCodes = []
@@ -234,14 +238,6 @@ async function helpFriends() {
     if(!$.canHelp) break
     await $.wait(1000)
   }
-  // if (helpAuthor && $.authorCode) {
-  //   for(let helpInfo of $.authorCode){
-  //     console.log(`去帮助好友${helpInfo['inviteCode']}`)
-  //     await helpFriend(helpInfo)
-  //     if(!$.canHelp) break
-  //     await $.wait(1000)
-  //   }
-  // }
 }
 function helpFriend(helpInfo) {
   return new Promise((resolve) => {
