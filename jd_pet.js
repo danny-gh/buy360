@@ -35,6 +35,7 @@ let cookiesArr = [], cookie = '', jdPetShareArr = [], isBox = false, notify, new
 let shareCodes = [ // IOS本地脚本用户这个列表填入你要助力的好友的shareCode
   ''
 ]; 
+let inviteCodeList = [];
 let message = '', subTitle = '', option = {};
 let jdNotify = false;//是否关闭通知，false打开通知推送，true关闭通知推送
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
@@ -68,10 +69,49 @@ let randomCount = $.isNode() ? 20 : 5;
       goodsUrl = '';
       taskInfoKey = [];
       option = {};
-      await shareCodesFormat();
+      //await shareCodesFormat();
       await jdPet();
     }
   }
+
+  console.log('\n##################开始账号内互助#################\n');
+  for (let i = 0; i < cookiesArr.length; i++) {
+    if (cookiesArr[i]) {
+      cookie = cookiesArr[i];
+      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
+      let helpPeoples = '';
+      for (let k = 0; k < inviteCodeList.length; k++) {
+        if (inviteCodeList[k].name === $.UserName) {
+          continue;
+        } else {
+          console.log(`\n${$.UserName}去助力${inviteCodeList[k].name},助力码：${inviteCodeList[k].code}\n`);
+          let response = await request('slaveHelp', { 'shareCode': inviteCodeList[k].code });
+          if (typeof response !== "undefined" && response.code === '0' && response.resultCode === '0') {
+            if (response.result.helpStatus === 0) {
+              console.log('已给好友: 【' + response.result.masterNickName + '】助力成功');
+              helpPeoples += response.result.masterNickName + '，';
+            } else if (response.result.helpStatus === 1) {
+              // 您今日已无助力机会
+              console.log(`助力好友${response.result.masterNickName}失败，您今日已无助力机会`);
+              break;
+            } else if (response.result.helpStatus === 2) {
+              //该好友已满5人助力，无需您再次助力
+              console.log(`该好友${response.result.masterNickName}已满5人助力，无需您再次助力`);
+            } else {
+              console.log(`助力其他情况：${JSON.stringify(response)}`);
+            }
+          } else {
+            console.log(`助力好友结果: ${response.message}`);
+          }
+          await $.wait(1000);
+        }
+      }
+      if (helpPeoples && helpPeoples.length > 0) {
+        message += `【您助力的好友】${helpPeoples.substr(0, helpPeoples.length - 1)}\n`;
+      }
+    }
+  }
+
   if ($.isNode() && allMessage && $.ctrTemp) {
     await notify.sendNotify(`${$.name}`, `${allMessage}`)
   }
@@ -87,11 +127,17 @@ async function jdPet() {
     //查询jd宠物信息
     const initPetTownRes = await request('initPetTown');
     message = `【京东账号${$.index}】${$.nickName}\n`;
-    if (initPetTownRes.code === '0' && initPetTownRes.resultCode === '0' && initPetTownRes.message === 'success') {
+    if (typeof initPetTownRes !== "undefined" && initPetTownRes.code === '0' && initPetTownRes.resultCode === '0' && initPetTownRes.message === 'success') {
       $.petInfo = initPetTownRes.result;
+                  inviteCodeList.push(
+                    {
+                      'name': $.UserName,
+                      'code': $.petInfo.shareCode,
+                    }
+                  );
       if ($.petInfo.userStatus === 0) {
         // $.msg($.name, '', `【提示】京东账号${$.index}${$.nickName}\n萌宠活动未开启\n请手动去京东APP开启活动\n入口：我的->游戏与互动->查看更多开启`, { "open-url": "openapp.jdmoble://" });
-        await slaveHelp();//助力好友
+        //await slaveHelp();//助力好友
         $.log($.name, '', `【提示】京东账号${$.index}${$.nickName}\n萌宠活动未开启\n请手动去京东APP开启活动\n入口：我的->游戏与互动->查看更多开启`);
         return
       }
@@ -104,7 +150,7 @@ async function jdPet() {
       // option['media-url'] = goodsUrl;
       // console.log(`初始化萌宠信息完成: ${JSON.stringify(petInfo)}`);
       if ($.petInfo.petStatus === 5) {
-        await slaveHelp();//可以兑换而没有去兑换,也能继续助力好友
+        //await slaveHelp();//可以兑换而没有去兑换,也能继续助力好友
         option['open-url'] = "openApp.jdMobile://";
         $.msg($.name, ``, `【京东账号${$.index}】${$.nickName || $.UserName}\n【提醒⏰】${$.petInfo.goodsInfo.goodsName}已可领取\n请去京东APP或微信小程序查看\n点击弹窗即达`, option);
         if ($.isNode()) {
@@ -112,7 +158,7 @@ async function jdPet() {
         }
         return
       } else if ($.petInfo.petStatus === 6) {
-        await slaveHelp();//已领取红包,但未领养新的,也能继续助力好友
+        //await slaveHelp();//已领取红包,但未领养新的,也能继续助力好友
         option['open-url'] = "openApp.jdMobile://";
         $.msg($.name, ``, `【京东账号${$.index}】${$.nickName || $.UserName}\n【提醒⏰】已领取红包,但未继续领养新的物品\n请去京东APP或微信小程序查看\n点击弹窗即达`, option);
         if ($.isNode()) {
@@ -135,7 +181,7 @@ async function jdPet() {
       $.taskInfo = $.taskInit.result;
 
       await petSport();//遛弯
-      await slaveHelp();//助力好友
+      //await slaveHelp();//助力好友
       await masterHelpInit();//获取助力的信息
       await doTask();//做日常任务
       await feedPetsAgain();//再次投食
@@ -244,8 +290,8 @@ async function doTask() {
 // 好友助力信息
 async function masterHelpInit() {
   let res = await request(arguments.callee.name.toString());
-  // console.log(`助力信息: ${JSON.stringify(res)}`);
-  if (res.code === '0' && res.resultCode === '0') {
+  console.log(`助力信息: ${JSON.stringify(res)}`);
+  if (typeof res !== "undefined" && res.code === '0' && res.resultCode === '0') {
     if (res.result.masterHelpPeoples && res.result.masterHelpPeoples.length >= 5) {
       if(!res.result.addedBonusFlag) {
         console.log("开始领取额外奖励");
@@ -543,6 +589,7 @@ function requireConfig() {
       cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
     }
     console.log(`共${cookiesArr.length}个京东账号\n`)
+    /*
     $.shareCodesArr = [];
     if ($.isNode()) {
       Object.keys(jdPetShareCodes).forEach((item) => {
@@ -557,6 +604,7 @@ function requireConfig() {
     // console.log(`$.shareCodesArr::${JSON.stringify($.shareCodesArr)}`)
     // console.log(`jdPetShareArr账号长度::${$.shareCodesArr.length}`)
     console.log(`您提供了${$.shareCodesArr.length}个账号的东东萌宠助力码\n`);
+    */
     resolve()
   })
 }
@@ -611,7 +659,7 @@ async function request(function_id, body = {}) {
     $.post(taskUrl(function_id, body), (err, resp, data) => {
       try {
         if (err) {
-          console.log('\n东东萌宠: API查询请求失败 ‼️‼️');
+          console.log(`\n东东萌宠: API: ${function_id}查询请求失败 ‼️‼️`);
           console.log(JSON.stringify(err));
           $.logErr(err);
         } else {
