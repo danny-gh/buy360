@@ -22,7 +22,7 @@ cron "15 1,6-18/6 * * *" script-path=jd_pet.js,tag=东东萌宠
 东东萌宠 = type=cron,cronexp="15 1,6-18/6 * * *",wake-system=1,timeout=3600,script-path=jd_pet.js
 
 ====================================小火箭=============================
-东东萌宠 = type=cron,script-path=jd_pet.js, cronexpr="15 6-18/6 * * *", timeout=3600, enable=true
+东东萌宠 = type=cron,script-path=jd_pet.js, cronexpr="15 1,6-18/6 * * *", timeout=3600, enable=true
 
 */
 const $ = new Env('东东萌宠');
