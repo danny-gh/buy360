@@ -35,6 +35,7 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
 //此此内容是IOS用户下载脚本到本地使用，填写互助码的地方，同一京东账号的好友互助码请使用@符号隔开。
 //下面给出两个账号的填写示例（iOS只支持2个京东账号）
 let shareCodes = []
+let noDailyTaskLeft = true;
 
 !(async () => {
   await requireConfig();
@@ -85,7 +86,10 @@ async function jdSuperMarket() {
     // await receiveLimitProductBlueCoin();//收限时商品的蓝币
     await daySign();//每日签到
     await BeanSign()//
-    await doDailyTask();//做日常任务，分享，关注店铺，
+  do{
+    await doDailyTask();
+  }while(noDailyTaskLeft === false);
+    //await doDailyTask();//做日常任务，分享，关注店铺，
     // await help();//商圈助力
     //await smtgQueryPkTask();//做商品PK任务
     await drawLottery();//抽奖功能(招财进宝)
@@ -151,6 +155,7 @@ async function help() {
 async function doDailyTask() {
   const smtgQueryShopTaskRes = await smtgQueryShopTask();
   if (smtgQueryShopTaskRes.code === 0 && smtgQueryShopTaskRes.data.success) {
+    noDailyTaskLeft = true;
     const taskList = smtgQueryShopTaskRes.data.result.taskList;
     console.log(`\n日常赚钱任务       完成状态`)
     for (let item of taskList) {
@@ -165,6 +170,7 @@ async function doDailyTask() {
       //做任务
       if ((item.type === 1 || item.type === 11) && item.taskStatus === 0) {
         // 分享任务
+        noDailyTaskLeft = false;
         const res = await smtgDoShopTask(item.taskId);
         console.log(`${item.subTitle}结果${JSON.stringify(res)}`)
       }
@@ -172,6 +178,7 @@ async function doDailyTask() {
         //逛会场
         if (item.taskStatus === 0) {
           console.log('开始逛会场')
+          noDailyTaskLeft = false;
           const itemId = item.content[item.type].itemId;
           const res = await smtgDoShopTask(item.taskId, itemId);
           console.log(`${item.subTitle}结果${JSON.stringify(res)}`);
@@ -181,6 +188,7 @@ async function doDailyTask() {
         //关注店铺
         if (item.taskStatus === 0) {
           console.log('开始关注店铺')
+          noDailyTaskLeft = false;
           const itemId = item.content[item.type].itemId;
           const res = await smtgDoShopTask(item.taskId, itemId);
           console.log(`${item.subTitle}结果${JSON.stringify(res)}`);
@@ -189,6 +197,7 @@ async function doDailyTask() {
       if (item.type === 9) {
         //开卡领蓝币任务
         if (item.taskStatus === 0) {
+          //noDailyTaskLeft = false;
           console.log('开始开卡领蓝币任务')
           const itemId = item.content[item.type].itemId;
           const res = await smtgDoShopTask(item.taskId, itemId);
@@ -198,6 +207,17 @@ async function doDailyTask() {
       if (item.type === 10) {
         //关注商品领蓝币
         if (item.taskStatus === 0) {
+          noDailyTaskLeft = false;
+          console.log('关注商品')
+          const itemId = item.content[item.type].itemId;
+          const res = await smtgDoShopTask(item.taskId, itemId);
+          console.log(`${item.subTitle}结果${JSON.stringify(res)}`);
+        }
+      }
+      if (item.type === 12) {
+        //加购商品
+        if (item.taskStatus === 0) {
+          noDailyTaskLeft = false;
           console.log('关注商品')
           const itemId = item.content[item.type].itemId;
           const res = await smtgDoShopTask(item.taskId, itemId);
