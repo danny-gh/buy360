@@ -9,7 +9,7 @@
 每个京东账号每天只能帮助3个人。多出的助力码将会助力失败。
 =====================================Quantumult X=================================
 [task_local]
-1 7-21/1 * * * jd_plantBean.js, tag=种豆得豆, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jdzd.png, enabled=true
+1 1,7-21/1 * * * jd_plantBean.js, tag=种豆得豆, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jdzd.png, enabled=true
 
 =====================================Loon================================
 [Script]
@@ -33,6 +33,7 @@ const JD_API_HOST = 'https://api.m.jd.com/client.action';
 //此此内容是IOS用户下载脚本到本地使用，填写互助码的地方，同一京东账号的好友互助码请使用@符号隔开。
 //下面给出两个账号的填写示例（iOS只支持2个京东账号）
 let shareCodes = ['']
+let inviteCodeList = [];
 let allMessage = ``;
 let currentRoundId = null;//本期活动id
 let lastRoundId = null;//上期id
@@ -66,11 +67,49 @@ let num;
       message = '';
       subTitle = '';
       option = {};
-      await shareCodesFormat();
+      //await shareCodesFormat();
       await jdPlantBean();
       await showMsg();
     }
   }
+
+  console.log('\n##################开始账号内互助#################\n');
+  for (let i = 0; i < cookiesArr.length; i++) {
+    if (cookiesArr[i]) {
+      cookie = cookiesArr[i];
+      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
+      for (let k = 0; k < inviteCodeList.length; k++) {
+        if (inviteCodeList[k].name === $.UserName) {
+          continue;
+        } else {
+          console.log(`\n${$.UserName}去助力${inviteCodeList[k].name},助力码：${inviteCodeList[k].code}\n`);
+          await helpShare(inviteCodeList[k].code);
+          if ($.helpResult && $.helpResult.code === '0') {
+            // console.log(`助力好友结果: ${JSON.stringify($.helpResult.data.helpShareRes)}`);
+            if ($.helpResult.data.helpShareRes) {
+              if ($.helpResult.data.helpShareRes.state === '1') {
+                console.log(`助力好友${inviteCodeList[k].name}成功`)
+                console.log(`${$.helpResult.data.helpShareRes.promptText}\n`);
+              } else if ($.helpResult.data.helpShareRes.state === '2') {
+                console.log('您今日助力的机会已耗尽，已不能再帮助好友助力了\n');
+                break;
+              } else if ($.helpResult.data.helpShareRes.state === '3') {
+                console.log('该好友今日已满9人助力/20瓶营养液,明天再来为Ta助力吧\n')
+              } else if ($.helpResult.data.helpShareRes.state === '4') {
+                console.log(`${$.helpResult.data.helpShareRes.promptText}\n`)
+              } else {
+                console.log(`助力其他情况：${JSON.stringify($.helpResult.data.helpShareRes)}`);
+              }
+            }
+          } else {
+            console.log(`助力好友失败: ${JSON.stringify($.helpResult)}`);
+          }
+          await $.wait(1000);
+        }
+      }
+    }
+  }
+
   if ($.isNode() && allMessage) {
     await notify.sendNotify(`${$.name}`, `${allMessage}`)
   }
@@ -95,6 +134,12 @@ async function jdPlantBean() {
       const shareUrl = $.plantBeanIndexResult.data.jwordShareInfo.shareUrl
       $.myPlantUuid = getParam(shareUrl, 'plantUuid')
       console.log(`\n【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】${$.myPlantUuid}\n`);
+      inviteCodeList.push(
+        {
+          'name': $.UserName,
+          'code': $.myPlantUuid,
+        }
+      );
       const submitCodeRes = await submitCode();
       if (submitCodeRes && submitCodeRes.code === 200) {
          console.log(`🥑种豆得豆-互助码提交成功！🥑`);
@@ -110,7 +155,7 @@ async function jdPlantBean() {
       message += `【上期时间】${roundList[num - 1].dateDesc.replace('上期 ', '')}\n`;
       message += `【上期成长值】${roundList[num - 1].growth}\n`;
       await receiveNutrients();//定时领取营养液
-      await doHelp();//助力
+      //await doHelp();//助力
       await doTask();//做日常任务
       await doEgg();
       await stealFriendWater();
@@ -523,7 +568,7 @@ async function plantShareSupportList() {
 }
 //助力好友的api
 async function helpShare(plantUuid) {
-  console.log(`\n开始助力好友: ${plantUuid}`);
+  //console.log(`\n开始助力好友: ${plantUuid}`);
   const body = {
     "plantUuid": plantUuid,
     "wxHeadImgUrl": "",
@@ -610,7 +655,7 @@ function requireConfig() {
     notify = $.isNode() ? require('./sendNotify') : '';
     //Node.js用户请在jdCookie.js处填写京东ck;
     const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
-    const jdPlantBeanShareCodes = $.isNode() ? require('./jdPlantBeanShareCodes.js') : '';
+    //const jdPlantBeanShareCodes = $.isNode() ? require('./jdPlantBeanShareCodes.js') : '';
     //IOS等用户直接用NobyDa的jd cookie
     if ($.isNode()) {
       Object.keys(jdCookieNode).forEach((item) => {
@@ -623,6 +668,7 @@ function requireConfig() {
       cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
     }
     console.log(`共${cookiesArr.length}个京东账号\n`)
+    /*
     $.shareCodesArr = [];
     if ($.isNode()) {
       Object.keys(jdPlantBeanShareCodes).forEach((item) => {
@@ -636,6 +682,7 @@ function requireConfig() {
     }
     // console.log(`\n种豆得豆助力码::${JSON.stringify($.shareCodesArr)}`);
     console.log(`您提供了${$.shareCodesArr.length}个账号的种豆得豆助力码\n`);
+    */
     resolve()
   })
 }

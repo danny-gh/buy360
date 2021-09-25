@@ -12,7 +12,7 @@
 =================================Quantumultx=========================
 [task_local]
 #东东萌宠
-15 6-18/6 * * * jd_pet.js, tag=东东萌宠, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jdmc.png, enabled=true
+15 1,6-18/6 * * * jd_pet.js, tag=东东萌宠, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jdmc.png, enabled=true
 
 =================================Loon===================================
 [Script]
@@ -101,6 +101,9 @@ let randomCount = $.isNode() ? 20 : 5;
               console.log(`助力其他情况：${JSON.stringify(response)}`);
             }
           } else {
+            if(response.resultCode === '1002'){//风控
+              break;
+            }
             console.log(`助力好友结果: ${response.message}`);
           }
           await $.wait(1000);
@@ -129,12 +132,12 @@ async function jdPet() {
     message = `【京东账号${$.index}】${$.nickName}\n`;
     if (typeof initPetTownRes !== "undefined" && initPetTownRes.code === '0' && initPetTownRes.resultCode === '0' && initPetTownRes.message === 'success') {
       $.petInfo = initPetTownRes.result;
-                  inviteCodeList.push(
-                    {
-                      'name': $.UserName,
-                      'code': $.petInfo.shareCode,
-                    }
-                  );
+      inviteCodeList.push(
+        {
+          'name': $.UserName,
+          'code': $.petInfo.shareCode,
+        }
+      );
       if ($.petInfo.userStatus === 0) {
         // $.msg($.name, '', `【提示】京东账号${$.index}${$.nickName}\n萌宠活动未开启\n请手动去京东APP开启活动\n入口：我的->游戏与互动->查看更多开启`, { "open-url": "openapp.jdmoble://" });
         //await slaveHelp();//助力好友
@@ -167,11 +170,11 @@ async function jdPet() {
         return
       }
       console.log(`\n【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】${$.petInfo.shareCode}\n`);
-      try{submitCodeRes =  await submitCode();}catch(e){}
+      try { submitCodeRes = await submitCode(); } catch (e) { }
       if (submitCodeRes && submitCodeRes.code === 200) {
-         console.log(`🐶东东萌宠-互助码提交成功！🐶`);
-      }else if (submitCodeRes.code === 300) {
-         console.log(`🐶东东萌宠-互助码已提交！🐶`);
+        console.log(`🐶东东萌宠-互助码提交成功！🐶`);
+      } else if (submitCodeRes.code === 300) {
+        console.log(`🐶东东萌宠-互助码已提交！🐶`);
       }
       await taskInit();
       if ($.taskInit.resultCode === '9999' || !$.taskInit.result) {
@@ -188,7 +191,7 @@ async function jdPet() {
       await energyCollect();//收集好感度
       await showMsg();
       console.log('全部任务完成, 如果帮助到您可以点下🌟STAR鼓励我一下, 明天见~');
-    } else if (initPetTownRes.code === '0'){
+    } else if (initPetTownRes.code === '0') {
       console.log(`初始化萌宠失败:  ${initPetTownRes.message}`);
     }
   } catch (e) {
