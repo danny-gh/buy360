@@ -41,11 +41,7 @@ let notifyLevel = $.isNode() ? process.env.JXNC_NOTIFY_LEVEL || 1 : 1; // 通知
 let notifyBool = true; // 代码内部使用，控制是否通知
 let cookieArr = []; // 用户 cookie 数组
 let currentCookie = ''; // 当前用户 cookie
-let tokenNull = {'farm_jstoken': '', 'phoneid': '', 'timestamp': ''}; // 内置一份空的 token
-let tokenArr = []; // 用户 token 数组
 let currentToken = {}; // 当前用户 token
-let shareCode = ''; // 内置助力码
-let jxncShareCodeArr = []; // 用户 助力码 数组
 let currentShareCode = []; // 当前用户 要助力的助力码
 const openUrl = `openjd://virtual?params=${encodeURIComponent('{ "category": "jump", "des": "m", "url": "https://wqsh.jd.com/sns/201912/12/jxnc/detail.html?ptag=7155.9.32&smp=b47f4790d7b2a024e75279f55f6249b9&active=jdnc_1_chelizi1205_2"}',)}`; // 打开京喜农场
 let subTitle = '', message = '', option = {'open-url': openUrl}; // 消息副标题，消息正文，消息扩展参数
@@ -62,7 +58,6 @@ let UA;
 
 $.maxHelpNum = $.isNode() ? 8 : 4; // 随机助力最大执行次数
 $.helpNum = 0; // 当前账号 随机助力次数
-let assistUserShareCode = 0; // 随机助力用户 share code
 
 !(async () => {
   await requireConfig();
@@ -89,6 +84,32 @@ let assistUserShareCode = 0; // 随机助力用户 share code
         }
         continue
       }
+      if (currentCookie.includes("pt_pin")) await getJxToken()
+      await getShareCode(); // 执行当前账号 主代码流程
+    }
+  }
+  $.log(`【好友互助码】: \n`);
+  for (let code of currentShareCode) {
+    $.log(`${code}\n`);
+  }
+  
+  for (let i = 0; i < cookieArr.length; i++) {
+    if (cookieArr[i]) {
+      currentCookie = cookieArr[i];
+      $.UserName = decodeURIComponent(currentCookie.match(/pt_pin=([^; ]+)(?=;?)/) && currentCookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
+      $.index = i + 1;
+      $.isLogin = true;
+      $.nickName = '';
+      $.log(`\n************* 检查【京东账号${$.index}】${$.UserName} cookie 是否有效 *************`);
+      await TotalBean();
+      $.log(`开始【京东账号${$.index}】${$.nickName || $.UserName}\n`);
+      if (!$.isLogin) {
+        $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/`, {"open-url": "https://bean.m.jd.com/"});
+        if ($.isNode()) {
+          await notify.sendNotify(`${$.name}cookie已失效 - ${$.UserName}`, `京东账号${$.index} ${$.UserName}\n请重新登录获取cookie`);
+        }
+        continue
+      }
       UA = `jdpingou;iPhone;4.13.0;14.4.2;${randomString()};network/wifi;model/iPhone10,2;appBuild/100609;ADID/00000000-0000-0000-0000-000000000000;supportApplePay/1;hasUPPay/0;pushNoticeIsOpen/1;hasOCPay/0;supportBestPay/0;session/${Math.random * 98 + 1};pap/JA2019_3111789;brand/apple;supportJDSHWK/1;Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148`
       if (currentCookie.includes("pt_pin")) await getJxToken()
       subTitle = '';
@@ -97,8 +118,6 @@ let assistUserShareCode = 0; // 随机助力用户 share code
       $.answer = 3;
       $.helpNum = 0;
       notifyBool = notifyLevel > 0; // 初始化是否推送
-      // await tokenFormat(); // 处理当前账号 token
-      await shareCodesFormat(); // 处理当前账号 助力码
       await jdJXNC(); // 执行当前账号 主代码流程
     }
   }
@@ -132,8 +151,6 @@ function requireConfig() {
     notify = $.isNode() ? require('./sendNotify') : '';
     //Node.js用户请在jdCookie.js处填写京东ck;
     const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
-    // const jdTokenNode = $.isNode() ? require('./jdJxncTokens.js') : '';
-    const jdJxncShareCodeNode = $.isNode() ? require('./jdJxncShareCodes.js') : {};
     //IOS等用户直接用NobyDa的jd cookie
     if ($.isNode()) {
       Object.keys(jdCookieNode).forEach((item) => {
@@ -147,67 +164,6 @@ function requireConfig() {
     }
 
     $.log(`共${cookieArr.length}个京东账号\n`);
-
-    // if ($.isNode()) {
-    //     Object.keys(jdTokenNode).forEach((item) => {
-    //         tokenArr.push(jdTokenNode[item] ? JSON.parse(jdTokenNode[item]) : tokenNull)
-    //     })
-    // } else {
-    //     let tmpTokens = JSON.parse($.getdata('jx_tokens') || '[]');
-    //     tokenArr.push(...tmpTokens)
-    // }
-
-    if ($.isNode()) {
-      Object.keys(jdJxncShareCodeNode).forEach((item) => {
-        if (jdJxncShareCodeNode[item]) {
-          jxncShareCodeArr.push(jdJxncShareCodeNode[item])
-        } else {
-          jxncShareCodeArr.push('');
-        }
-      })
-    }
-
-    // 检查互助码是否为 json [smp,active,joinnum] 格式，否则进行通知
-    for (let i = 0; i < jxncShareCodeArr.length; i++) {
-      if (jxncShareCodeArr[i]) {
-        let tmpJxncShareStr = jxncShareCodeArr[i];
-        let tmpjsonShareCodeArr = tmpJxncShareStr.split('@');
-        if (!changeShareCodeJson(tmpjsonShareCodeArr[0])) {
-          $.log('互助码格式已变更，请重新填写互助码');
-          $.msg($.name, '互助码格式变更通知', '互助码格式变更，请重新填写 ‼️‼️', option);
-          if ($.isNode()) {
-            await notify.sendNotify(`${$.name}`, `互助码格式变更，请重新填写 ‼️‼️`);
-          }
-        }
-        break;
-      }
-    }
-
-    // console.log(`jdFruitShareArr::${JSON.stringify(jxncShareCodeArr)}`)
-    // console.log(`jdFruitShareArr账号长度::${jxncShareCodeArr.length}`)
-    $.log(`您提供了${jxncShareCodeArr.length}个账号的京喜农场助力码`);
-    shareCode = await getAuthorShareCode()
-//     try {
-//       let options = {
-//         "url": `https://cdn.jsdelivr.net/gh/Aaron-lv/updateTeam@master/shareCodes/jxnc.txt`,
-//         "headers": {
-//           "Accept": "application/json,text/plain, */*",
-//           "Content-Type": "application/x-www-form-urlencoded",
-//           "Accept-Encoding": "gzip, deflate, br",
-//           "Accept-Language": "zh-cn",
-//           "Connection": "keep-alive",
-//           "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36"
-//         },
-//         "timeout": 10000,
-//       }
-//       $.get(options, (err, resp, data) => { // 初始化内置变量
-//         if (!err) {
-//           shareCode = data;
-//         }
-//       });
-//     } catch (e) {
-//       // 获取内置助力码失败
-//     }
     resolve()
   })
 }
@@ -255,33 +211,24 @@ function TotalBean() {
   })
 }
 
-// 处理当前账号token
-function tokenFormat() {
-  return new Promise(async resolve => {
-    if (tokenArr[$.index - 1] && tokenArr[$.index - 1].farm_jstoken) {
-      currentToken = tokenArr[$.index - 1];
+
+async function getShareCode() {
+  const startInfo = await getTaskList();
+  if (startInfo) {
+    if (startInfo.target <= startInfo.score) { // 水滴已满
     } else {
-      currentToken = tokenNull;
+      let shareCodeJson = {
+        "smp": $.info.smp,
+        "active": $.info.active,
+        "joinnum": $.info.joinnum,
+      };
+      $.log(`【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】` + JSON.stringify(shareCodeJson));
+      currentShareCode.push(JSON.stringify(shareCodeJson));
+      await $.wait(500);
     }
-    resolve();
-  })
+  }
 }
 
-// 处理当前账号助力码
-function shareCodesFormat() {
-  return new Promise(async resolve => {
-    // console.log(`第${$.index}个京东账号的助力码:::${jdFruitShareArr[$.index - 1]}`)
-    if (jxncShareCodeArr[$.index - 1]) {
-      currentShareCode = jxncShareCodeArr[$.index - 1].split('@');
-      currentShareCode.push(...(shareCode.split('@')));
-    } else {
-      $.log(`由于您第${$.index}个京东账号未提供shareCode,将采纳本脚本自带的助力码`)
-      currentShareCode = shareCode.split('@');
-    }
-    $.log(`第${$.index}个京东账号将要助力的好友${JSON.stringify(currentShareCode)}`)
-    resolve();
-  })
-}
 
 async function jdJXNC() {
   subTitle = `【京东账号${$.index}】${$.nickName}`;
@@ -300,12 +247,14 @@ async function jdJXNC() {
         notifyBool = notifyBool && notifyLevel >= 3;
       }
     } else {
+      /*
       let shareCodeJson = {
         "smp": $.info.smp,
         "active": $.info.active,
         "joinnum": $.info.joinnum,
       };
       $.log(`【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】` + JSON.stringify(shareCodeJson));
+      */
       await $.wait(500);
       const isOk = await browserTask();
       if (isOk) {
@@ -316,25 +265,11 @@ async function jdJXNC() {
         getMessage(endInfo, startInfo);
         //await submitInviteId($.UserName);
         await $.wait(500);
-        let next = await helpFriends();
-//         if (next) {
-//           while ($.helpNum < $.maxHelpNum) {
-//             $.helpNum++;
-//             assistUserShareCodeJson = await getAssistUser();
-//             if (assistUserShareCodeJson) {
-//               await $.wait(500);
-//               next = await helpShareCode(assistUserShareCodeJson['smp'], assistUserShareCodeJson['active'], assistUserShareCodeJson['joinnum']);
-//               if (next) {
-//                 await $.wait(1000);
-//                 continue;
-//               }
-//             }
-//             break;
-//           }
-//         }
       }
     }
   }
+  //let next = await helpFriends();
+  await helpFriends();
   await showMsg()
 }
 
@@ -487,6 +422,7 @@ function getMessage(endInfo, startInfo) {
   }
 }
 
+/*
 // 提交助力码
 function submitInviteId(userName) {
   return new Promise(resolve => {
@@ -521,41 +457,7 @@ function submitInviteId(userName) {
     }
   });
 }
-
-function getAssistUser() {
-  return new Promise(resolve => {
-    try {
-      $.get({
-        url: `https://api.ninesix.cc/api/jx-nc?active=${$.info.active}`,
-        timeout: 10000
-      }, async (err, resp, _data) => {
-        try {
-          const {code, data: {value, extra = {}} = {}} = JSON.parse(_data);
-          if (value && extra.active) { //  && extra.joinnum 截止 2021-01-22 16:39:09 API 线上还未部署新的 joinnum 参数代码，暂时默认 1 兼容
-            let shareCodeJson = {
-              'smp': value,
-              'active': extra.active,
-              'joinnum': extra.joinnum || 1
-            };
-            $.log(`获取随机助力码成功 ` + JSON.stringify(shareCodeJson));
-            resolve(shareCodeJson);
-            return;
-          } else {
-            $.log(`获取随机助力码失败 ${code}`);
-          }
-        } catch (e) {
-          // $.logErr(e, resp);
-          $.log('获取随机助力码失败 API 返回异常');
-        } finally {
-          resolve(false);
-        }
-      });
-    } catch (e) {
-      // $.logErr(e, resp);
-      resolve(false);
-    }
-  });
-}
+*/
 
 // 为好友助力 return true 继续助力  false 助力结束
 async function helpFriends() {
@@ -625,46 +527,6 @@ function helpShareCode(smp, active, joinnum) {
         },
     );
   });
-}
-function getAuthorShareCode(url="https://raw.githubusercontent.com/he1pu/JDHelp/main/zcodes.json") {
-    return new Promise(async resolve => {
-        const options = {
-            "url": `${url}`,
-            "timeout": 10000,
-            "headers": {
-                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/87.0.4280.88"
-            }
-        };
-        if ($.isNode() && process.env.TG_PROXY_HOST && process.env.TG_PROXY_PORT) {
-            const tunnel = require("tunnel");
-            const agent = {
-                https: tunnel.httpsOverHttp({
-                    proxy: {
-                        host: process.env.TG_PROXY_HOST,
-                        port: process.env.TG_PROXY_PORT * 1
-                    }
-                })
-            }
-            Object.assign(options, { agent })
-        }
-        $.get(options, async (err, resp, data) => {
-            try {
-                if (err) {
-                } else {
-                    if (data) {
-                      data = JSON.parse(data)
-                      data = data.jxnc
-                    }
-                }
-            } catch (e) {
-                // $.logErr(e, resp)
-            } finally {
-                resolve(data || '');
-            }
-        })
-        await $.wait(10000)
-        resolve('');
-    })
 }
 
 function doTask({tasklevel, left, taskname, eachtimeget}) {
