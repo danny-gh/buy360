@@ -39,8 +39,8 @@ http-request ^https:\/\/draw\.jdfcloud\.com(\/mirror)?\/\/api\/user\/user\/detai
 */
 const $ = new Env('宠汪汪赛跑');
 const zooFaker = require('./utils/JDJRValidator_Pure');
-$.get = zooFaker.injectToRequest2($.get.bind($));
-$.post = zooFaker.injectToRequest2($.post.bind($));
+$.get = zooFaker.injectToRequest($.get.bind($));
+$.post = zooFaker.injectToRequest($.post.bind($));
 //宠汪汪赛跑所需token，默认读取作者服务器的
 //需自行抓包，宠汪汪小程序获取token，点击`发现`或`我的`，寻找`^https:\/\/draw\.jdfcloud\.com(\/mirror)?\/\/api\/user\/user\/detail\?openId=`获取token
 let jdJoyRunToken = '';
@@ -54,11 +54,11 @@ const JD_BASE_API = `https://draw.jdfcloud.com//pet`;
 //Node.js用户请在jdCookie.js处填写京东ck;
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : {};
 //下面给出好友邀请助力的示例填写规则
-let invite_pins = ["jd_4d72a07e446a5", "jd_xSwGGPGahqma", "15622795740_p", "200520006_m"];
+let invite_pins = ["tristan111", "jd_5dae043c1f610", "18601623180_p", "jd_XsGqpyqzLjIQ", "jd_77e33f4a3758a"];
 //下面给出好友赛跑助力的示例填写规则
-let run_pins = ["jd_4d72a07e446a5", "jd_xSwGGPGahqma", "15622795740_p", "200520006_m"];
+let run_pins = ["tristan111", "jd_5dae043c1f610", "18601623180_p", "jd_XsGqpyqzLjIQ", "jd_77e33f4a3758a"];
 //friendsArr内置太多会导致IOS端部分软件重启,可PR过来(此处目的:帮别人助力可得30g狗粮)
-let friendsArr = ["jd_4d72a07e446a5", "jd_xSwGGPGahqma", "15622795740_p", "200520006_m"];
+let friendsArr = ["tristan111", "jd_5dae043c1f610", "18601623180_p", "jd_XsGqpyqzLjIQ", "jd_77e33f4a3758a"];
 
 
 //IOS等用户直接用NobyDa的jd cookie
@@ -88,6 +88,7 @@ if ($.isNode()) {
 } else {
   //支持 "京东多账号 Ck 管理"的cookie
   cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
+  /*
   if ($.getdata('jd_joy_invite_pin')) {
     invite_pins = [];
     invite_pins.push($.getdata('jd_joy_invite_pin'));
@@ -112,13 +113,14 @@ if ($.isNode()) {
       run_pins.push($.getdata('jd2_joy_run_pin'));
     }
   }
+  */
 }
 async function main() {
   if (!cookiesArr[0]) {
     $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
     return;
   }
-  let readTokenRes = await getNetToken('https://raw.githubusercontent.com/he1pu/JDHelp/main/joy_run_token.json');
+  let readTokenRes = await getNetToken('https://ghproxy.com/https://raw.githubusercontent.com/danny-gh/buy360/main/joy_run_token.json');
   if (readTokenRes && readTokenRes.code === 200) {
     $.LKYLToken = readTokenRes.data[0] || ($.isNode() ? (process.env.JOY_RUN_TOKEN ? process.env.JOY_RUN_TOKEN : jdJoyRunToken) : ($.getdata('jdJoyRunToken') || jdJoyRunToken));
   } else {
@@ -128,20 +130,21 @@ async function main() {
   if (!$.LKYLToken) {
     $.msg($.name, '【提示】请先获取来客有礼宠汪汪token', "1、开启抓包工具(iOS免费工具商店搜索stream)\n2、微信搜索'来客有礼'小程序\n3、在抓包工具中搜索（请求头）“LKYLToken”\n4、填入环境变量：JOY_RUN_TOKEN");    // return;
   }
-  await getFriendPins();
+  //await getFriendPins();
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       $.validate = '';
       // const zooFaker = require('./utils/JDJRValidator_Pure');
       // $.validate = await zooFaker.injectToRequest()
       if ($.isNode()) {
-        if (process.env.JOY_RUN_HELP_MYSELF) {
+        //if (process.env.JOY_RUN_HELP_MYSELF) {
           console.log(`\n赛跑会先给账号内部助力,如您当前账户有剩下助力机会则为lx0301作者助力\n`)
           let my_run_pins = [];
           Object.values(jdCookieNode).filter(item => item.match(/pt_pin=([^; ]+)(?=;?)/)).map(item => my_run_pins.push(decodeURIComponent(item.match(/pt_pin=([^; ]+)(?=;?)/)[1])))
           run_pins = [...new Set(my_run_pins), [...getRandomArrayElements([...run_pins[0].split(',')], [...run_pins[0].split(',')].length)]];
           run_pins = [[...run_pins].join(',')];
           invite_pins = run_pins;
+        /*  
         } else {
           console.log(`\n赛跑先给作者两个固定的pin进行助力,然后从账号内部与剩下的固定位置合并后随机抽取进行助力\n如需自己账号内部互助,设置环境变量 JOY_RUN_HELP_MYSELF 为true,则开启账号内部互助\n`)
           run_pins = run_pins[0].split(',')
@@ -153,6 +156,7 @@ async function main() {
           run_pins = [[...fixPins, ...randomPins].join(',')];
           invite_pins = run_pins;
         }
+        */
       }
       cookie = cookiesArr[i];
       UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
@@ -165,7 +169,7 @@ async function main() {
       console.log(`=============【开始邀请助力】===============`)
       const inviteIndex = $.index > invite_pins.length ? (invite_pins.length - 1) : ($.index - 1);
       let new_invite_pins = invite_pins[inviteIndex].split(',');
-      new_invite_pins = [...new_invite_pins, ...getRandomArrayElements(friendsArr, friendsArr.length >= 18 ? 18 : friendsArr.length)];
+      //new_invite_pins = [...new_invite_pins, ...getRandomArrayElements(friendsArr, friendsArr.length >= 18 ? 18 : friendsArr.length)];
       await invite(new_invite_pins);
       if ($.jdLogin && $.LKYLLogin) {
         if (nowTimes.getHours() >= 9 && nowTimes.getHours() < 21) {
@@ -334,7 +338,8 @@ async function invite(invite_pins) {
           console.log(`已给该好友 ${item} 助力过或者此friendPin是你自己\n`)
         } else if (helpStatus=== 'invite_full') {
           console.log(`助力失败，该好友 ${item} 已经满3人给他助力了,无需您再次助力\n`)
-        } else if (helpStatus=== 'can_help') {
+        //} else if (helpStatus=== 'can_help') {
+        } else {
           console.log(`开始给好友 ${item} 助力\n`)
           const LKYL_DATA = await helpInviteFriend(item);
           if (LKYL_DATA.errorCode === 'L0001' && !LKYL_DATA.success) {
