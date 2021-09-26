@@ -22,11 +22,11 @@ cron "15 0-23/1 * * *" script-path=jd_joy_feedPets.js,tag=京东宠汪汪喂食
 */
 const $ = new Env('宠汪汪🐕喂食');
 const zooFaker = require('./utils/JDJRValidator_Pure');
-$.get = zooFaker.injectToRequest2($.get.bind($));
+$.get = zooFaker.injectToRequest($.get.bind($));
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
-let invoke_key = "RtKLB8euDo7KwsO0";
+let invoke_key = "JL1VTNRadM68cIMQ";
 try{
     let hConfig = require('./utils/HConfig.js')
     invoke_key = hConfig.invokeKey
