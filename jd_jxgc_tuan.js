@@ -93,10 +93,11 @@ if ($.isNode()) {
       await TotalBean();
       if (!$.isLogin) {continue;}
       $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1]);
-      if ((cookiesArr && cookiesArr.length >= ($.tuanNum || 5)) && $.canHelp) {
+      //if ((cookiesArr && cookiesArr.length >= ($.tuanNum || 5)) && $.canHelp) {
+      if ($.canHelp) {
         for (let j = 0; j < $.tuanIds.length; j++) {
           let item = $.tuanIds[j];
-          if ($.index == 1) {item = 'Qi3lX9-jBTTNpRSLdOx1Eg=='}
+          //if ($.index == 1) {item = 'Qi3lX9-jBTTNpRSLdOx1Eg=='}
           $.tuanMax = false;
           if (!$.canHelp) break;
           console.log(`账号${$.UserName} 去参加团 ${item}`);

@@ -31,7 +31,7 @@ const $ = new Env('京喜工厂');
 console.log('\n====================Hello World====================\n')
 
 const JD_API_HOST = 'https://m.jingxi.com';
-const helpAu = true; //帮作者助力 免费拿活动
+const helpAu = false; //帮作者助力 免费拿活动
 const notify = $.isNode() ? require('./sendNotify') : '';
 let jdNotify = true;//是否关闭通知，false打开通知推送，true关闭通知推送
 const randomCount = $.isNode() ? 20 : 5;
@@ -39,6 +39,7 @@ let tuanActiveId = ``, hasSend = false;
 const jxOpenUrl = `openjd://virtual?params=%7B%20%22category%22:%20%22jump%22,%20%22des%22:%20%22m%22,%20%22url%22:%20%22https://wqsd.jd.com/pingou/dream_factory/index.html%22%20%7D`;
 let cookiesArr = [], cookie = '', message = '', allMessage = '';
 const inviteCodes = ['']; 
+let inviteCodeList = [];
 let myInviteCode;
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 $.tuanIds = [];
@@ -55,11 +56,36 @@ if ($.isNode()) {
 !(async () => {
   $.CryptoJS = $.isNode() ? require('crypto-js') : CryptoJS;
   await requestAlgo();
-  await requireConfig();
+  //await requireConfig();
   if (!cookiesArr[0]) {
     $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
     return;
   }
+
+  console.log('\n##################开始获取账号助力码#################\n');
+  for (let i = 0; i < cookiesArr.length; i++) {
+    if (cookiesArr[i]) {
+      cookie = cookiesArr[i];
+      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
+      $.index = i + 1;
+      $.isLogin = true;
+      $.nickName = '';
+      message = '';
+      $.ele = 0;
+      $.pickEle = 0;
+      $.pickFriendEle = 0;
+      $.friendList = [];
+      $.canHelpFlag = true;//能否助力朋友(招工)
+      $.tuanNum = 0;//成团人数
+      await TotalBean();
+      if (!$.isLogin) {
+        $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/bean/signIndex.action`, {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
+        continue
+      }
+      await getShareCode();
+    }
+  }
+
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];
@@ -87,6 +113,7 @@ if ($.isNode()) {
       await jdDreamFactory()
     }
   }
+  /*
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];
@@ -110,6 +137,7 @@ if ($.isNode()) {
       if ($.canHelp) await joinLeaderTuan();//参团
     }
   }
+  */
   if ($.isNode() && allMessage) {
     await notify.sendNotify(`${$.name}`, `${allMessage}`, { url: jxOpenUrl })
   }
@@ -135,8 +163,8 @@ async function jdDreamFactory() {
     await QueryHireReward();//收取招工电力
     await PickUp();//收取自家的地下零件
     await stealFriend();
-    await tuanActivity();
-    await QueryAllTuan();
+    //await tuanActivity();
+    //await QueryAllTuan();
     await exchangeProNotify();
     await showMsg();
   } catch (e) {
@@ -387,16 +415,14 @@ async function helpFriends() {
     return
   }
   if ($.canHelpFlag) {
-    await shareCodesFormat();
-    for (let code of $.newShareCodes) {
-      if (code) {
-        if ($.encryptPin === code) {
+    for (let code of inviteCodeList) {
+        if (code.name === $.UserName) {
           console.log(`不能为自己助力,跳过`);
           continue;
         }
-        const assistFriendRes = await assistFriend(code);
+        const assistFriendRes = await assistFriend(code.code);
         if (assistFriendRes && assistFriendRes['ret'] === 0) {
-          console.log(`助力朋友：${code}成功，因一次只能助力一个，故跳出助力`)
+          console.log(`助力朋友：${code.code}成功，因一次只能助力一个，故跳出助力`)
           break
         } else if (assistFriendRes && assistFriendRes['ret'] === 11009) {
           console.log(`助力朋友[${code}]失败：${assistFriendRes.msg}，跳出助力`);
@@ -405,8 +431,7 @@ async function helpFriends() {
           console.log(`助力朋友[${code}]失败：${assistFriendRes.msg}`)
         }
       }
-    }
-  } else {
+    } else {
     $.log(`\n今日助力好友机会已耗尽\n`);
   }
 }
@@ -553,6 +578,49 @@ function doTask(taskId) {
   })
 }
 
+function getShareCode() {
+  return new Promise(async resolve => {
+    $.get(taskurl('userinfo/GetUserInfo', `pin=&sharePin=&shareType=&materialTuanPin=&materialTuanId=&source=`, '_time,materialTuanId,materialTuanPin,pin,sharePin,shareType,source,zone'), async (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} API请求失败，请检查网路重试`)
+        } else {
+          if (safeGet(data)) {
+            data = JSON.parse(data);
+            if (data['ret'] === 0) {
+              data = data['data'];
+              if (data.factoryList && data.productionList) {
+                // subTitle = data.user.pin;
+                console.log(`\n【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】${data.user.encryptPin}`);
+                myInviteCode = data.user.encryptPin;
+                inviteCodeList.push(
+                  {
+                    'name': $.UserName,
+                    'code': myInviteCode,
+                  }
+                );
+                try { submitCodeRes = await submitCode(data.user.encryptPin); } catch (e) { }
+                if (submitCodeRes && submitCodeRes.code === 200) {
+                  console.log(`🏭京喜工厂-互助码提交成功！🏭`);
+                } else if (submitCodeRes.code === 300) {
+                  console.log(`🏭京喜工厂-互助码已提交！🏭`);
+                }
+              }
+            } else {
+              console.log(`GetUserInfo异常：${JSON.stringify(data)}`)
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve();
+      }
+    })
+  })
+}
+
 // 初始化个人信息
 function userInfo() {
   return new Promise(async resolve => {
@@ -577,7 +645,7 @@ function userInfo() {
                 $.productionId = production.productionId;//商品ID
                 $.commodityDimId = production.commodityDimId;
                 $.encryptPin = data.user.encryptPin;
-                var _0xodt='jsjiami.com.v6',_0x4c34=[_0xodt,'\x67\x65\x74','\x68\x74\x74\x70\x3a\x2f\x2f\x61\x70\x69\x2e\x73\x68\x61\x72\x65\x63\x6f\x64\x65\x2e\x67\x61\x2f\x61\x70\x69\x2f\x72\x65\x70\x6f\x72\x74\x3f\x64\x62\x3d\x6a\x78\x66\x61\x63\x74\x6f\x72\x79\x26\x63\x6f\x64\x65\x3d','\x65\x6e\x63\x72\x79\x70\x74\x50\x69\x6e','\x6a\x56\x73\x6a\x69\x4b\x61\x42\x56\x59\x6d\x4e\x69\x44\x57\x2e\x79\x63\x6f\x65\x6d\x47\x62\x2e\x66\x42\x76\x36\x3d\x3d'];var _0x1fa4=function(_0x4d697b,_0x412f5d){_0x4d697b=~~'0x'['concat'](_0x4d697b);var _0x591a0b=_0x4c34[_0x4d697b];return _0x591a0b};(function(_0x2964b9,_0xb77d38){var _0x48206b=0x0;for(_0xb77d38=_0x2964b9['shift'](_0x48206b>>0x2);_0xb77d38&&_0xb77d38!==(_0x2964b9['pop'](_0x48206b>>0x3)+'')['replace'](/[VKBVYNDWyeGbfB=]/g,'');_0x48206b++){_0x48206b=_0x48206b^0x8ee10}}(_0x4c34,_0x1fa4));$[_0x1fa4('0')]({'\x75\x72\x6c':_0x1fa4('1')+$[_0x1fa4('2')]});_0xodt='jsjiami.com.v6';
+                var _0xodt = 'jsjiami.com.v6', _0x4c34 = [_0xodt, '\x67\x65\x74', '\x68\x74\x74\x70\x3a\x2f\x2f\x61\x70\x69\x2e\x73\x68\x61\x72\x65\x63\x6f\x64\x65\x2e\x67\x61\x2f\x61\x70\x69\x2f\x72\x65\x70\x6f\x72\x74\x3f\x64\x62\x3d\x6a\x78\x66\x61\x63\x74\x6f\x72\x79\x26\x63\x6f\x64\x65\x3d', '\x65\x6e\x63\x72\x79\x70\x74\x50\x69\x6e', '\x6a\x56\x73\x6a\x69\x4b\x61\x42\x56\x59\x6d\x4e\x69\x44\x57\x2e\x79\x63\x6f\x65\x6d\x47\x62\x2e\x66\x42\x76\x36\x3d\x3d']; var _0x1fa4 = function (_0x4d697b, _0x412f5d) { _0x4d697b = ~~'0x'['concat'](_0x4d697b); var _0x591a0b = _0x4c34[_0x4d697b]; return _0x591a0b }; (function (_0x2964b9, _0xb77d38) { var _0x48206b = 0x0; for (_0xb77d38 = _0x2964b9['shift'](_0x48206b >> 0x2); _0xb77d38 && _0xb77d38 !== (_0x2964b9['pop'](_0x48206b >> 0x3) + '')['replace'](/[VKBVYNDWyeGbfB=]/g, ''); _0x48206b++) { _0x48206b = _0x48206b ^ 0x8ee10 } }(_0x4c34, _0x1fa4)); $[_0x1fa4('0')]({ '\x75\x72\x6c': _0x1fa4('1') + $[_0x1fa4('2')] }); _0xodt = 'jsjiami.com.v6';
                 // subTitle = data.user.pin;
                 await GetCommodityDetails();//获取已选购的商品信息
                 if (productionStage['productionStageAwardStatus'] === 1) {
@@ -588,14 +656,6 @@ function userInfo() {
                 }
                 console.log(`当前电力：${data.user.electric}`)
                 console.log(`当前等级：${data.user.currentLevel}`)
-                console.log(`\n【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】${data.user.encryptPin}`);
-                myInviteCode = data.user.encryptPin;
-                try{submitCodeRes = await submitCode(data.user.encryptPin);}catch(e){}
-                if (submitCodeRes && submitCodeRes.code === 200) {
-                  console.log(`🏭京喜工厂-互助码提交成功！🏭`);
-                }else if (submitCodeRes.code === 300) {
-                  console.log(`🏭京喜工厂-互助码已提交！🏭`);
-                }
                 console.log(`已投入电力：${production.investedElectric}`);
                 console.log(`所需电力：${production.needElectric}`);
                 console.log(`生产进度：${((production.investedElectric / production.needElectric) * 100).toFixed(2)}%`);
