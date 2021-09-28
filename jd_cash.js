@@ -7,10 +7,17 @@
 脚本兼容: QuantumultX, Surge, Loon, JSBox, Node.js
 [task_local]
 #签到领现金
-32 0,1,2 * * * jd_cash.js, tag=签到领现金, , enabled=true
+2 0-23/4 * * * jd_cash.js, tag=签到领现金, img-url=https://raw.githubusercontent.com/Orz-3/mini/master/Color/jd.png, enabled=true
+
 ================Loon==============
 [Script]
-cron "32 0,1,2 * * *" jd_cash.js
+cron "2 0-23/4 * * *" script-path=jd_cash.js,tag=签到领现金
+
+===============Surge=================
+签到领现金 = type=cron,cronexp="2 0-23/4 * * *",wake-system=1,timeout=3600,script-path=jd_cash.js
+
+============小火箭=========
+签到领现金 = type=cron,script-path=jd_cash.js, cronexpr="2 0-23/4 * * *", timeout=3600, enable=true
  */
 const $ = new Env('签到领现金');
 const notify = $.isNode() ? require('./sendNotify') : '';
@@ -19,9 +26,10 @@ const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 let jdNotify = true;//是否关闭通知，false打开通知推送，true关闭通知推送
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '', message;
-const randomCount = $.isNode() ? 5 : 5;
+//const randomCount = $.isNode() ? 5 : 5;
 let cash_exchange = false;//是否消耗2元红包兑换200京豆，默认否
-const inviteCodes = []
+//const inviteCodes = []
+let inviteCodeList = [];
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
     cookiesArr.push(jdCookieNode[item])
@@ -37,8 +45,8 @@ let allMessage = '';
     $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
     return;
   }
-  await requireConfig()
-  $.authorCode = []
+  //await requireConfig()
+//  $.authorCode = []
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];
@@ -58,6 +66,14 @@ let allMessage = '';
         continue
       }
       await jdCash()
+      await $.wait(20000)
+    }
+  }
+  for (let i = 0; i < cookiesArr.length; i++) {
+    if (cookiesArr[i]) {
+      cookie = cookiesArr[i];
+      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
+      await helpFriends();
     }
   }
   if (allMessage) {
@@ -77,7 +93,7 @@ async function jdCash() {
   await appindex()
   await index()
 
-  await shareCodesFormat()
+  //await shareCodesFormat()
   // await helpFriends()
   await getReward()
   await getReward('2');
@@ -124,8 +140,8 @@ async function appindex(info=false) {
         } else {
           if (safeGet(data)) {
             data = JSON.parse(data);
-            if(data.code===0 && data.data.result){
-              if(info){
+            if (data.code === 0 && data.data.result) {
+              if (info) {
                 if (message) {
                   message += `当前现金：${data.data.result.totalMoney}元`;
                   allMessage += `京东账号${$.index}${$.nickName}\n${message}${$.index !== cookiesArr.length ? '\n\n' : ''}`;
@@ -140,31 +156,37 @@ async function appindex(info=false) {
                 'inviteCode': data.data.result.invitedCode,
                 'shareDate': data.data.result.shareDate
               }
-              $.shareDate = data.data.result.shareDate;
+              inviteCodeList.push(
+                {
+                  'name': $.UserName,
+                  'code': helpInfo,
+                }
+              );
+              //$.shareDate = data.data.result.shareDate;
               // $.log(`shareDate: ${$.shareDate}`)
               // console.log(helpInfo)
               for (let task of data.data.result.taskInfos) {
                 if (task.type === 4) {
                   for (let i = task.doTimes; i < task.times; ++i) {
-                    console.log(`去做${task.name}任务 ${i+1}/${task.times}`)
+                    console.log(`去做${task.name}任务 ${i + 1}/${task.times}`)
                     await appdoTask(task.type, task.jump.params.skuId)
                     await $.wait(5000)
                   }
                 } else if (task.type === 2) {
                   for (let i = task.doTimes; i < task.times; ++i) {
-                    console.log(`去做${task.name}任务 ${i+1}/${task.times}`)
+                    console.log(`去做${task.name}任务 ${i + 1}/${task.times}`)
                     await appdoTask(task.type, task.jump.params.shopId)
                     await $.wait(5000)
                   }
                 } else if (task.type === 30) {
                   for (let i = task.doTimes; i < task.times; ++i) {
-                    console.log(`去做${task.name}任务 ${i+1}/${task.times}`)
+                    console.log(`去做${task.name}任务 ${i + 1}/${task.times}`)
                     await appdoTask(task.type, task.jump.params.path)
                     await $.wait(5000)
                   }
-                } else if (task.type === 16 || task.type===3 || task.type===5 || task.type===17 || task.type===21) {
+                } else if (task.type === 16 || task.type === 3 || task.type === 5 || task.type === 17 || task.type === 21) {
                   for (let i = task.doTimes; i < task.times; ++i) {
-                    console.log(`去做${task.name}任务 ${i+1}/${task.times}`)
+                    console.log(`去做${task.name}任务 ${i + 1}/${task.times}`)
                     await appdoTask(task.type, task.jump.params.url)
                     await $.wait(5000)
                   }
@@ -232,9 +254,12 @@ function index() {
 }
 async function helpFriends() {
   $.canHelp = true
-  for (let code of $.newShareCodes) {
-    console.log(`去帮助好友${code['inviteCode']}`)
-    await helpFriend(code)
+  for (let item of inviteCodeList) {
+    if(item.name === $.UserName){
+      continue;
+    }
+    console.log(`${$.UserName}去帮助好友${item.name}: ${item.code['inviteCode']}`)
+    await helpFriend(item.code)
     if(!$.canHelp) break
     await $.wait(1000)
   }
