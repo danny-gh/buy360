@@ -47,7 +47,7 @@ if ($.isNode()) {
 }
 $.appId = 10028;
 !(async () => {
-  await requireConfig();
+  //await requireConfig();
   if (!cookiesArr[0]) {
     $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
     return;
@@ -77,7 +77,7 @@ $.appId = 10028;
       $.info = {}
       UA = `jdpingou;iPhone;5.4.0;14.7.1;${randomString(40)};network/wifi;model/iPhone11,2;appBuild/100650;ADID/00000000-0000-0000-0000-000000000000;supportApplePay/1;hasUPPay/0;pushNoticeIsOpen/0;hasOCPay/0;supportBestPay/0;session/${Math.random * 98 + 1};pap/JA2019_3111789;brand/apple;supportJDSHWK/1;Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148`
       token = await getJxToken()
-      await shareCodesFormat()
+      //await shareCodesFormat()
       await cfd();
       await $.wait(2000);
       UAInfo[$.UserName] = UA
@@ -97,6 +97,7 @@ $.appId = 10028;
         if (!$.canHelp) break
       }
     }
+    /*
     if (!$.canHelp) continue
     await readShareCode();
     //console.log(codePool)
@@ -111,6 +112,7 @@ $.appId = 10028;
     }else {
         console.log('助力池获取互助码失败，请稍后重试');
     }
+    */
   }
   await showMsg();
 })()
@@ -1376,7 +1378,7 @@ function helpByStage(shareCodes) {
           data = JSON.parse(data);
           if (data.iRet === 0 || data.sErrMsg === 'success') {
             console.log(`助力成功：获得${data.Data.GuestPrizeInfo.strPrizeName}`)
-          } else if (data.iRet === 2232 || data.sErrMsg === '今日助力次数达到上限，明天再来帮忙吧~') {
+          } else if (data.iRet === 2235 || data.sErrMsg === '今日助力次数达到上限，明天再来帮忙吧~') {
             console.log(`助力失败：${data.sErrMsg}`)
             $.canHelp = false
           } else if (data.iRet === 9999 || data.sErrMsg === '您还没有登录，请先登录哦~') {
