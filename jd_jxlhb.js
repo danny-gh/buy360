@@ -67,7 +67,7 @@ const BASE_URL = 'https://m.jingxi.com/cubeactive/steprewardv3'
     UAInfo[$.UserName] = UA
   }
   //互助
-  $.authorMyShareIds = await getAuthorShareCode();
+  //$.authorMyShareIds = await getAuthorShareCode();
   console.log(`\n\n自己京东账号助力码：\n${JSON.stringify($.packetIdArr)}\n\n`);
   console.log(`\n开始助力：自己京东相互助力\n`)
   for (let i = 0; i < cookiesArr.length; i++) {
@@ -90,6 +90,7 @@ const BASE_URL = 'https://m.jingxi.com/cubeactive/steprewardv3'
         continue
       }
     }
+    /*
     if ($.canHelp && ($.authorMyShareIds && $.authorMyShareIds.length)) {
       console.log(`\n【${$.UserName}】有剩余助力机会，开始助力作者\n`)
       for (let j = 0; j < $.authorMyShareIds.length && $.canHelp; j++) {
@@ -104,6 +105,7 @@ const BASE_URL = 'https://m.jingxi.com/cubeactive/steprewardv3'
         }
       }
     }
+    */
   }
   //拆红包
   for (let i = 0; i < cookiesArr.length; i++) {

@@ -23,11 +23,13 @@ if ($.isNode()) {
         $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
         return;
     }
+    /*
     let res = [];
     try{res = await getAuthorShareCode();}catch (e) {}
     if(res.length > 0){
         $.shareUuid = getRandomArrayElements(res,1)[0];
     }
+    */
     for (let i = 0; i < cookiesArr.length; i++) {
         await getUA();
         $.index = i + 1;

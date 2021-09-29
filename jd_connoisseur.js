@@ -42,7 +42,7 @@ let allMessage = '';
     $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
     return;
   }
-  let res = [{"use":"code1","code":"S5KkcREoe9wXXJ0_wkPFbcQ"},{"use":"code2","code":"S5KkcCH1egiO3V0us1apb"}];
+  //let res = [{"use":"code1","code":"S5KkcREoe9wXXJ0_wkPFbcQ"},{"use":"code2","code":"S5KkcCH1egiO3V0us1apb"}];
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];
@@ -65,7 +65,7 @@ let allMessage = '';
       await jdConnoisseur()
     }
   }
-  $.shareCodes = [...$.shareCodes, ...(res || [])]
+  //$.shareCodes = [...$.shareCodes, ...(res || [])]
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];
@@ -82,6 +82,7 @@ let allMessage = '';
           }
           $.delcode = false
           await getTaskInfo("2", $.projectCode, $.taskCode, $.helpType, "2", $.shareCodes[j].code)
+          //await getTaskInfo("2", $.projectCode, $.taskCode, "2", $.shareCodes[j].code)
           await $.wait(2000)
           if ($.delcode) {
             $.shareCodes.splice(j, 1)
@@ -268,14 +269,14 @@ function interactive_done(type, projectId, assignmentId, itemId) {
           if (data) {
             data = JSON.parse(data)
             if (type === "2") {
-              if (data.code === "0") {
+              if (data.code === "0" && data.busiCode === "0") {
                 console.log(data.data.msg)
                 if (!data.data.success) $.canHelp = false
               } else {
                 console.log(data.message)
               }
             } else {
-              if (data.code === "0") {
+              if (data.code === "0" && data.busiCode === "0") {
                 console.log(data.data.rewardMsg)
               } else {
                 console.log(data.message)
@@ -326,7 +327,7 @@ function interactive_reward(type, projectId, assignmentId) {
         } else {
           if (data) {
             data = JSON.parse(data)
-            if (data.code === "0") {
+            if (data.code === "0" && data.busiCode === "0") {
               console.log(data.data.rewardMsg)
             } else {
               console.log(data.message)
@@ -376,7 +377,9 @@ async function qryViewkitCallbackResult(encryptProjectId, encryptAssignmentId, i
         } else {
           if (data) {
             data = JSON.parse(data)
-            console.log(`恭喜获得2个京豆`)
+            if (data.code === "0" || data.msg === "query success!") {
+              console.log(`恭喜获得2个京豆`)
+            }
           }
         }
       } catch (e) {
