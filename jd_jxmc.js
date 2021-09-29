@@ -261,9 +261,9 @@ async function feedCabbage() {
     $.runFeed = true;
     console.log(`开始第${k++}次喂白菜`);
     await takeGetRequest('feed');
-    await $.wait(1000);
+    await $.wait(2000);
     await takeGetRequest('GetHomePageInfo');
-    await $.wait(1000);
+    await $.wait(2000);
     if ($.runFeed == false) {
       break;
     }
