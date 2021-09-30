@@ -120,6 +120,7 @@ const urlSchema = `openjd://virtual?params=%7B%20%22category%22:%20%22jump%22,%2
       }
       message += `【今日剩余助力👬】${remainTimes}次\n`;
       console.log('助力好友结束，即将开始领取额外水滴奖励\n');
+      await getAwardInviteFriend();
     }
   }
   console.log('开始天天抽奖--好友助力--每人每天只有三次助力机会.')
@@ -127,6 +128,7 @@ const urlSchema = `openjd://virtual?params=%7B%20%22category%22:%20%22jump%22,%2
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];
       $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
+      await getExtraAward();//领取额外水滴奖励
       for (let k = 0; k < inviteCodeList.length; k++) {
         if (inviteCodeList[k].name === $.UserName) {
           continue;
@@ -313,10 +315,8 @@ async function doDailyTask() {
   //   getExtraAward(),//领取额外水滴奖励
   //   turntableFarm()//天天抽奖得好礼
   // ])
-  await getAwardInviteFriend();
   await clockInIn();//打卡领水
   await executeWaterRains();//水滴雨
-  await getExtraAward();//领取额外水滴奖励
   await turntableFarm()//天天抽奖得好礼
 }
 async function predictionFruit() {
@@ -979,27 +979,19 @@ async function getWaterFriendGotAward() {
 }
 //接收成为对方好友的邀请
 async function receiveFriendInvite() {
-  for (let code of newShareCodes) {
-    if (code === $.farmInfo.farmUserPro.shareCode) {
-      console.log('自己不能邀请自己成为好友噢\n')
-      continue
-    }
-    await inviteFriend(code);
-    // console.log(`接收邀请成为好友结果:${JSON.stringify($.inviteFriendRes)}`)
-    if ($.inviteFriendRes && $.inviteFriendRes.helpResult && $.inviteFriendRes.helpResult.code === '0') {
-      console.log(`接收邀请成为好友结果成功,您已成为${$.inviteFriendRes.helpResult.masterUserInfo.nickName}的好友`)
-    } else if ($.inviteFriendRes && $.inviteFriendRes.helpResult && $.inviteFriendRes.helpResult.code === '17') {
-      console.log(`接收邀请成为好友结果失败,对方已是您的好友`)
+  for (let k = 0; k < inviteCodeList.length; k++) {
+    if (inviteCodeList[k].name === $.UserName) {
+      continue;
+    } else {
+      await inviteFriend(inviteCodeList[k].code);
+      // console.log(`接收邀请成为好友结果:${JSON.stringify($.inviteFriendRes)}`)
+      if ($.inviteFriendRes && $.inviteFriendRes.helpResult && $.inviteFriendRes.helpResult.code === '0') {
+        console.log(`接收邀请成为好友结果成功,您已成为${$.inviteFriendRes.helpResult.masterUserInfo.nickName}的好友`)
+      } else if ($.inviteFriendRes && $.inviteFriendRes.helpResult && $.inviteFriendRes.helpResult.code === '17') {
+        console.log(`接收邀请成为好友结果失败,对方已是您的好友`)
+      }
     }
   }
-  // console.log(`开始接受6fbd26cc27ac44d6a7fed34092453f77的邀请\n`)
-  // await inviteFriend('6fbd26cc27ac44d6a7fed34092453f77');
-  // console.log(`接收邀请成为好友结果:${JSON.stringify($.inviteFriendRes.helpResult)}`)
-  // if ($.inviteFriendRes.helpResult.code === '0') {
-  //   console.log(`您已成为${$.inviteFriendRes.helpResult.masterUserInfo.nickName}的好友`)
-  // } else if ($.inviteFriendRes.helpResult.code === '17') {
-  //   console.log(`对方已是您的好友`)
-  // }
 }
 async function duck() {
   for (let i = 0; i < 10; i++) {
