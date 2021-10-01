@@ -78,11 +78,9 @@ if ($.isNode()) {
   }
 
   console.log('\n##################开始账号内互助(红包)#################\n');
-  await getShareCode('jxmchb.json')
-  $.inviteCodeList_hb = [...($.inviteCodeList_hb || []), ...($.shareCode || [])]
-  for(let i = 0;i<$.helpCkList.length;i++){
+  for (let i = 0; i < cookiesArr.length; i++) {
     $.can_help = true
-    $.cookie = $.helpCkList[i]
+    $.cookie = cookiesArr[i];
     token = await getJxToken()
     $.UserName = decodeURIComponent($.cookie.match(/pt_pin=(.+?);/) && $.cookie.match(/pt_pin=(.+?);/)[1])
     for (let j = 0; j < $.inviteCodeList_hb.length && $.can_help; j++) {
@@ -99,8 +97,9 @@ if ($.isNode()) {
   console.log('\n##################开始账号内互助#################\n');
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
-      cookie = cookiesArr[i];
-      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
+      $.cookie = cookiesArr[i];
+      token = await getJxToken()
+      $.UserName = decodeURIComponent($.cookie.match(/pt_pin=([^; ]+)(?=;?)/) && $.cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
       $.canHelp = true;
       for (let k = 0; k < $.inviteCodeList.length; k++) {
         $.oneCodeInfo = $.inviteCodeList[k];
