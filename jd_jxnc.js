@@ -84,6 +84,7 @@ $.helpNum = 0; // 当前账号 随机助力次数
         }
         continue
       }
+      UA = `jdpingou;iPhone;4.13.0;14.4.2;${randomString()};network/wifi;model/iPhone10,2;appBuild/100609;ADID/00000000-0000-0000-0000-000000000000;supportApplePay/1;hasUPPay/0;pushNoticeIsOpen/1;hasOCPay/0;supportBestPay/0;session/${Math.random * 98 + 1};pap/JA2019_3111789;brand/apple;supportJDSHWK/1;Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148`
       if (currentCookie.includes("pt_pin")) await getJxToken()
       await getShareCode(); // 执行当前账号 主代码流程
     }
@@ -215,8 +216,7 @@ function TotalBean() {
 async function getShareCode() {
   const startInfo = await getTaskList();
   if (startInfo) {
-    if (startInfo.target <= startInfo.score) { // 水滴已满
-    } else {
+    if (startInfo.activestatus === 1) { // 成熟未收取
       let shareCodeJson = {
         "smp": $.info.smp,
         "active": $.info.active,
@@ -224,6 +224,7 @@ async function getShareCode() {
       };
       $.log(`【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】` + JSON.stringify(shareCodeJson));
       currentShareCode.push(JSON.stringify(shareCodeJson));
+      //await submitInviteId($.UserName);
       await $.wait(500);
     }
   }
@@ -246,7 +247,11 @@ async function jdJXNC() {
         message += '账号未选择种子，请先去京喜农场选择种子。\n如果选择 APP 专属种子，必须提供 token。\n';
         notifyBool = notifyBool && notifyLevel >= 3;
       }
-    } else {
+    } else if (startInfo.activestatus === 0) { // 未种植（成熟已收取）
+      $.log('账号未选择种子，请先去京喜农场选择种子。\n如果选择 APP 专属种子，必须提供 token。');
+      message += '账号未选择种子，请先去京喜农场选择种子。\n如果选择 APP 专属种子，必须提供 token。\n';
+      notifyBool = notifyBool && notifyLevel >= 3;
+    }else {
       /*
       let shareCodeJson = {
         "smp": $.info.smp,
@@ -422,7 +427,6 @@ function getMessage(endInfo, startInfo) {
   }
 }
 
-/*
 // 提交助力码
 function submitInviteId(userName) {
   return new Promise(resolve => {
@@ -457,7 +461,6 @@ function submitInviteId(userName) {
     }
   });
 }
-*/
 
 // 为好友助力 return true 继续助力  false 助力结束
 async function helpFriends() {
