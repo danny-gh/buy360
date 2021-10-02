@@ -1,42 +1,24 @@
-/*
-* 粉丝互动，没啥水
-* 修改温某的脚本，由于温某不干活，只能自己动手修改了
-* 注意：脚本会加购，脚本会加购，脚本会加购
-* 若发现脚本里没有的粉丝互动活动。欢迎反馈给我
-cron  "34 5,17 * * *" jd_wxFans.js
+/**
+粉丝互动，尽量自己设置定时，在0点和1点抽奖，白天基本没水
+修改温某的脚本，由于温某不干活，只能自己动手修改了
+注意：脚本会加购，脚本会加购，脚本会加购
+若发现脚本里没有的粉丝互动活动。欢迎反馈给我
+cron 4 0,1 * * * https://raw.githubusercontent.com/star261/jd/main/scripts/jd_fan.js
 * */
 const $ = new Env('粉丝互动');
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 const notify = $.isNode() ? require('./sendNotify') : '';
 let cookiesArr = [];
 const activityList = [
-    {"actid":"2aac05400cfb47c1b91cf8152f90b8e7","endTime":1632931200000},
-    {"actid":"f1f1d34436ec4909aa7903f64205e283","endTime":1633622400000},
-    {"actid":"dc06b5c5caf742ebb3040e43edf5b85a","endTime":1631505600000},
-    {"actid":"e9c2a3156dc44c6e9fe59e9d890f694f","endTime":1631721599000},
-    {"actid":"bf5a0953a44b4cdb95a704a330719534","endTime":1631635200000},
-    {"actid":"2e8a6f983f934eef8ec3da0e6eef6fd2","endTime":1631894400000},
-    {"actid":"7377aba024114ddfa25bad00948a8722","endTime":1632931200000},
-    {"actid":"897876a4bba844adadc3c956c152ca7d","endTime":1631289600000},
-    {"actid":"b6bd7155cefe443aae1e5a74383008f2","endTime":1635695999000},
-    {"actid":"4368aa3b3c26477dbf8f9a3a45226938","endTime":1631545200000},
-    {"actid":"3651af1ff7194fb3b37235dd15538d58","endTime":1632067199000},
-    {"actid":"6b1fb17eceb047c487537b2deb9694d8","endTime":1631261565000},
-    {"actid":"2bfa9b34365140f8a51293043ca2821f","endTime":1633017599000},
-    {"actid":"3ae867cd253f42b1992ae90598b7549a","endTime":1632931200000},
-    {"actid":"9f90ca09236d4f9b86aca47db4d885f2","endTime":1631375999000},
-    {"actid":"2d2280b86b394cc09d436feecb4e5d3b","endTime":1632931200000},
-    {"actid":"0b8f1d09788947669f75c4bcc4fde4ae","endTime":1633017599000},
-    {"actid":"e7a53032cfe84b1fb882c3bbf43f5e5e","endTime":1631203200000},
-    {"actid":"bde48555ac8b41669f516f892f95e21c","endTime":1633017599000},
-    {"actid":"86eab05c547d4d28829d269e2a5c4f1e","endTime":1633017599000},
-    {"actid":"73086c4fed7746e1b911a776d2e8662e","endTime":1633017599000},
-    {"actid":"179e156d768240db84393751fc9c427b","endTime":1633017599000},
-    {"actid":"fa3c9189473141c0aec883301452e562","endTime":1633017599000},
-    {"actid":"bed695cfc40941c0a641eba935f9601e","endTime":1633017599000},
-    {"actid":"eff9c47393be446f9dd576e26d13dd9d","endTime":1631635200000},
-    {"actid":"5622386323bb4a82a2ed4e0158f7c6a7","endTime":1631289599000}
-];
+    {"actid": "e49fe34c09e3447083992f4867588dd9", "endTime": 1633190398000},
+    {"actid": "de0f54a0769a45e0a369f8c6de9a0192", "endTime": 1633622361000},
+    {"actid": "c475acc1f3214c038881abeff5cd6442", "endTime": 1633795200000},
+    {"actid": "68ae48944e414d31b2447f131531aec0", "endTime": 1633622399000},
+    {"actid": "9d282149fb424ec7b7a907b000d3e61e", "endTime": 2633017599000},
+    {"actid": "f558202c53794a088b9c58d36b8a1aa9", "endTime": 2633017599000},
+    {"actid": "e2bf8a1453494e0699e5b880c09bda20", "endTime": 2633017599000},
+    {"actid": "417e3042d5944a0d8a0eaa01717000c1", "endTime": 2633017599000}
+]
 if ($.isNode()) {
     Object.keys(jdCookieNode).forEach((item) => {
         cookiesArr.push(jdCookieNode[item])
@@ -60,8 +42,8 @@ if ($.isNode()) {
         $.oldcookie = cookiesArr[i];
         $.isLogin = true;
         $.nickName = '';
-        await TotalBean();
         $.UserName = decodeURIComponent($.cookie.match(/pt_pin=([^; ]+)(?=;?)/) && $.cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1]);
+        await TotalBean();
         console.log(`\n*****开始【京东账号${$.index}】${$.nickName || $.UserName}*****\n`);
         if (!$.isLogin) {
             $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/bean/signIndex.action`, {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
@@ -126,11 +108,11 @@ async function main() {
     let gitList = [];
     let gitTypeList = ['One','Two','Three'];
     for (let i = 0; i < gitTypeList.length; i++) {
-      let gitInfo = $.activityData.actInfo['giftLevel'+ gitTypeList[i]] || '';
-      if(gitInfo){
-        gitInfo = JSON.parse(gitInfo);
-        gitList.push(gitInfo[0].name);
-      }
+        let gitInfo = $.activityData.actInfo['giftLevel'+ gitTypeList[i]] || '';
+        if(gitInfo){
+            gitInfo = JSON.parse(gitInfo);
+            gitList.push(gitInfo[0].name);
+        }
     }
     console.log(`奖品列表：` + gitList.toString());
     if($.actorInfo.prizeOneStatus && $.actorInfo.prizeTwoStatus && $.actorInfo.prizeThreeStatus){

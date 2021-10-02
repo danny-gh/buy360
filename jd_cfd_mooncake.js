@@ -140,6 +140,7 @@ async function helpLoop() {
                     }
                 }
             }
+            /*
             if ($.canHelp) {
                 await readShareCode();
             }
@@ -157,6 +158,7 @@ async function helpLoop() {
                     }
                 }
             }
+            */
         }
     }catch(e) {
         $.logErr(e)
