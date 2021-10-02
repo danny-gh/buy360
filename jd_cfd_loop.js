@@ -35,7 +35,7 @@ $.appId = 10028;
   await requestAlgo();
   await $.wait(1000)
   console.log('\n')
-  while (true) {
+  do {
     count++
     console.log(`============开始第${count}次挂机=============`)
     for (let i = 0; i < cookiesArr.length; i++) {
@@ -59,7 +59,7 @@ $.appId = 10028;
         UAInfo[$.UserName] = UA
       }
     }
-  }
+  } while (count < 25)
 })()
     .catch((e) => $.logErr(e))
     .finally(() => $.done());
