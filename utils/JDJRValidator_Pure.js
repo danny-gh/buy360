@@ -517,7 +517,36 @@ class MousePosFaker {
   }
 }
 
-function injectToRequest(fn,scene = 'cww', ua = '') {
+// new JDJRValidator().run();
+// new JDJRValidator().report(1000);
+// console.log(getCoordinate(new MousePosFaker(100).run()));
+
+function injectToRequest2(fn, scene = 'cww') {
+  return (opts, cb) => {
+    fn(opts, async (err, resp, data) => {
+      try {
+        if (err) {
+          console.error('验证请求失败.');
+          return;
+        }
+        if (data.search('验证') > -1) {
+          console.log('JDJR验证中......');
+          const res = await new JDJRValidator().run(scene);
+          if (res) {
+            opts.url += `&validate=${res.validate}`;
+          }
+          fn(opts, cb);
+        } else {
+          cb(err, resp, data);
+        }
+      } catch (e) {
+        console.info(e)
+      }
+    });
+  };
+}
+
+function injectToRequest3(fn,scene = 'cww', ua = '') {
   if(ua) UA = ua
   return (opts, cb) => {
     fn(opts, async (err, resp, data) => {
@@ -545,4 +574,24 @@ function injectToRequest(fn,scene = 'cww', ua = '') {
   };
 }
 
-exports.injectToRequest = injectToRequest;
+async function injectToRequest(scene = 'cww') {
+  console.log('JDJR验证中......');
+  const res = await new JDJRValidator().run(scene);
+  return `&validate=${res.validate}`
+}
+
+// exports.sleep = sleep;
+
+// exports.injectToRequest = injectToRequest;
+
+// exports.injectToRequest2 = injectToRequest2;
+
+// exports.injectToRequest3 = injectToRequest3;
+
+module.exports = {
+  sleep,
+  injectToRequest,
+  injectToRequest2,
+  injectToRequest3
+
+}
