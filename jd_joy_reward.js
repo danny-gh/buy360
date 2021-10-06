@@ -87,7 +87,8 @@ Date.prototype.Format = function (fmt) { //author: meizz
       $.validate = '';
       $.validate = await zooFaker.injectToRequest()
       console.log(`脚本开始请求时间 ${(new Date()).Format("yyyy-MM-dd hh:mm:ss | S")}`);
-      await joyReward();
+      await joyReward1();
+      //await joyReward();
     }
   }
   if ($.isNode() && allMessage && $.ctrTemp) {
@@ -100,6 +101,90 @@ Date.prototype.Format = function (fmt) { //author: meizz
     .finally(() => {
       $.done();
     })
+
+async function joyReward1() {
+  try {
+    let d = new Date();
+    console.log(`\nlocal time:${d.getTime()}\n`)
+    let hour = d.getHours();
+    let giftSaleInfos = null;
+    let rewardNum = process.env.JD_JOY_REWARD_NAME ? process.env.JD_JOY_REWARD_NAME * 1 : 500;
+    d.setMinutes(59);
+    d.setSeconds(59);
+    d.setMilliseconds(999);
+    let fireTime = d.getTime();
+    console.log(`\nfire time:${fireTime}\n`)
+    switch (hour) {
+      case 7:
+        giftSaleInfos = 'beanConfigs8';
+        break;
+      case 15:
+        giftSaleInfos = 'beanConfigs16';
+        break;
+      case 23:
+        giftSaleInfos = 'beanConfigs0';
+        break;
+      default:
+        //return;
+        break;
+    }
+    console.log(`\n将参加场次:${giftSaleInfos}\n`)
+    await getExchangeRewards();
+    if ($.getExchangeRewardsRes && $.getExchangeRewardsRes.success) {
+      console.log(`\nserver time:${$.getExchangeRewardsRes['currentTime']}\n`)
+      const data = $.getExchangeRewardsRes.data;
+      let saleInfoId = '', giftValue = '', leftStock = 0, salePrice = 0;
+      for (let item of data[giftSaleInfos]) {
+        console.log(`${item['giftName']}当前库存:${item['leftStock']}，id：${item.id}`)
+        if (item.giftType === 'jd_bean' && item['giftValue'] === rewardNum) {
+          saleInfoId = item.id;
+          leftStock = item.leftStock;
+          salePrice = item.salePrice;
+          giftValue = item.giftValue;
+        }
+      }
+      await getExchangeRewards();
+      if ($.getExchangeRewardsRes && $.getExchangeRewardsRes.success) {
+        let serverTime = $.getExchangeRewardsRes['currentTime'];
+        if (serverTime <= fireTime) {
+          let sleeptime = fireTime - serverTime;
+          await zooFaker.sleep(sleeptime);
+        }
+      }
+      if (salePrice && leftStock && saleInfoId) {
+        for (let j = 0; j <= 10; j++) {
+          await exchange(saleInfoId, 'pet');
+          if ($.exchangeRes && $.exchangeRes.success) {
+            if ($.exchangeRes.errorCode === 'buy_success') {
+              console.log(`\n兑换${giftValue}成功,【消耗积分】${salePrice}个\n`)
+              if ($.isNode()) {
+                allMessage += `【京东账号${$.index}】 ${$.nickName}\n【${giftValue}京豆】兑换成功🎉\n【积分详情】消耗积分 ${salePrice}${$.index !== cookiesArr.length ? '\n\n' : ''}`
+              }
+              break;
+            } else if ($.exchangeRes && $.exchangeRes.errorCode === 'buy_limit') {
+              console.log(`\n兑换${rewardNum}京豆失败，原因：兑换京豆已达上限，请把机会留给更多的小伙伴~\n`)
+              break;
+            } else if ($.exchangeRes && $.exchangeRes.errorCode === 'stock_empty') {
+              console.log(`\ncurrent server time:${$.exchangeRes['currentTime']}\n`)
+              console.log(`\n兑换${rewardNum}京豆失败，原因：当前京豆库存为空\n`)
+            } else if ($.exchangeRes && $.exchangeRes.errorCode === 'insufficient') {
+              console.log(`\n兑换${rewardNum}京豆失败，原因：当前账号积分不足兑换${giftValue}京豆所需的${salePrice}积分\n`)
+              break
+            } else {
+              console.log(`\ncurrent server time:${$.exchangeRes['currentTime']}\n`)
+              console.log(`\n兑奖失败:${JSON.stringify($.exchangeRes)}`)
+            }
+          } else {
+            console.log(`\ncurrent server time:${$.exchangeRes['currentTime']}\n`)
+            console.log(`\n兑奖失败:${JSON.stringify($.exchangeRes)}`)
+          }
+        }
+      }
+    }
+  } catch (e) {
+    $.logErr(e)
+  }
+}
 
 async function joyReward() {
   try {
