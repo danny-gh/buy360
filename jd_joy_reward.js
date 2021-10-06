@@ -108,11 +108,12 @@ async function joyReward1() {
     console.log(`\nlocal time:${d.getTime()}\n`)
     let hour = d.getHours();
     let giftSaleInfos = null;
-    let rewardNum = process.env.JD_JOY_REWARD_NAME ? process.env.JD_JOY_REWARD_NAME * 1 : 500;
     d.setMinutes(59);
     d.setSeconds(59);
-    d.setMilliseconds(999);
+    d.setMilliseconds(849);
     let fireTime = d.getTime();
+    d.setMilliseconds(999);
+    let targetTime = d.getTime();
     console.log(`\nfire time:${fireTime}\n`)
     switch (hour) {
       case 7:
@@ -133,14 +134,21 @@ async function joyReward1() {
     if ($.getExchangeRewardsRes && $.getExchangeRewardsRes.success) {
       console.log(`\nserver time:${$.getExchangeRewardsRes['currentTime']}\n`)
       const data = $.getExchangeRewardsRes.data;
-      let saleInfoId = '', giftValue = '', leftStock = 0, salePrice = 0;
+      let saleInfoId500 = '', giftValue500 = '', leftStock500 = 0, salePrice500 = 0;
+      let saleInfoId20 = '', giftValue20 = '', leftStock20 = 0, salePrice20 = 0;
       for (let item of data[giftSaleInfos]) {
         console.log(`${item['giftName']}当前库存:${item['leftStock']}，id：${item.id}`)
-        if (item.giftType === 'jd_bean' && item['giftValue'] === rewardNum) {
-          saleInfoId = item.id;
-          leftStock = item.leftStock;
-          salePrice = item.salePrice;
-          giftValue = item.giftValue;
+        if (item.giftType === 'jd_bean' && item['giftValue'] === 500) {
+          saleInfoId500 = item.id;
+          leftStock500 = item.leftStock;
+          salePrice500 = item.salePrice;
+          giftValue500 = item.giftValue;
+        }
+        if (item.giftType === 'jd_bean' && item['giftValue'] === 20) {
+          saleInfoId20 = item.id;
+          leftStock20 = item.leftStock;
+          salePrice20 = item.salePrice;
+          giftValue20 = item.giftValue;
         }
       }
       await getExchangeRewards();
@@ -151,6 +159,7 @@ async function joyReward1() {
           await zooFaker.sleep(sleeptime);
         }
       }
+      let saleInfoId = saleInfoId500, giftValue = giftValue500, leftStock = leftStock500, salePrice = salePrice500;
       if (salePrice && leftStock && saleInfoId) {
         for (let j = 0; j <= 10; j++) {
           await exchange(saleInfoId, 'pet');
@@ -162,13 +171,16 @@ async function joyReward1() {
               }
               break;
             } else if ($.exchangeRes && $.exchangeRes.errorCode === 'buy_limit') {
-              console.log(`\n兑换${rewardNum}京豆失败，原因：兑换京豆已达上限，请把机会留给更多的小伙伴~\n`)
+              console.log(`\n兑换${giftValue}京豆失败，原因：兑换京豆已达上限，请把机会留给更多的小伙伴~\n`)
               break;
             } else if ($.exchangeRes && $.exchangeRes.errorCode === 'stock_empty') {
               console.log(`\ncurrent server time:${$.exchangeRes['currentTime']}\n`)
-              console.log(`\n兑换${rewardNum}京豆失败，原因：当前京豆库存为空\n`)
+              console.log(`\n兑换${giftValue}京豆失败，原因：当前京豆库存为空\n`)
+              if($.exchangeRes['currentTime'] > targetTime){
+                saleInfoId = saleInfoId20, giftValue = giftValue20, leftStock = leftStock20, salePrice = salePrice20;
+              }
             } else if ($.exchangeRes && $.exchangeRes.errorCode === 'insufficient') {
-              console.log(`\n兑换${rewardNum}京豆失败，原因：当前账号积分不足兑换${giftValue}京豆所需的${salePrice}积分\n`)
+              console.log(`\n兑换${giftValue}京豆失败，原因：当前账号积分不足兑换${giftValue}京豆所需的${salePrice}积分\n`)
               break
             } else {
               console.log(`\ncurrent server time:${$.exchangeRes['currentTime']}\n`)
