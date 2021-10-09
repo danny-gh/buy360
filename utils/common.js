@@ -7,7 +7,7 @@ let notify = require('../sendNotify');
 let mainEval = require("./eval");
 let assert = require('assert');
 let jxAlgo = require("./jxAlgo");
-let config = require("./config");
+let config = require("./HConfig");
 let user = {}
 try {
     user = require("./user")
