@@ -80,8 +80,8 @@ let noDailyTaskLeft = true;
 
 async function jdSuperMarket() {
   try {
-    await receiveGoldCoin();//收金币
-    await businessCircleActivity();//商圈活动
+    //await receiveGoldCoin();//收金币
+    //await businessCircleActivity();//商圈活动
     await receiveBlueCoin();//收蓝币（小费）
     // await receiveLimitProductBlueCoin();//收限时商品的蓝币
     await daySign();//每日签到
@@ -98,12 +98,10 @@ async function jdSuperMarket() {
     // await manageProduct();
     // await limitTimeProduct();
     await smtg_shopIndex();
-    await smtgHome();
+    await smtg_newHome_xh();
+    //await smtgHome();
     await receiveUserUpgradeBlue();
-    await Home();
-//     if (helpAu === true) {
-//       await helpAuthor();
-//     }
+    //await Home();
   } catch (e) {
     $.logErr(e)
   }
@@ -943,8 +941,69 @@ async function Home() {
 
 //=============================================脚本使用到的京东API=====================================
 
-//===新版本
-
+//收获店铺升级的气泡 By X1a0He
+function smtg_newHome_xh() {
+    return new Promise((resolve) => {
+        console.log("获取店铺升级蓝币气泡中...")
+        $.get(taskUrl_xh('smtg_newHome', {
+            "channel": "7"
+        }), async (err, resp, data) => {
+            try {
+                if (err) {
+                    console.log('\n东东超市: API查询请求失败 ‼️‼️')
+                    console.log(JSON.stringify(err));
+                } else {
+                    data = JSON.parse(data);
+                    if (data && data.data['bizCode'] === 0) {
+                        $.userUpgradeBlueVos = data.data.result.userUpgradeBlueVos;
+                        console.log(`成功获取店铺升级蓝币气泡 ${$.userUpgradeBlueVos.length} 个`);
+                        for (let i = 0; i < $.userUpgradeBlueVos.length; i++) {
+                            let blueVosId = $.userUpgradeBlueVos[i].id;
+                            await smtg_receiveCoin_xh(blueVosId);
+                            $.wait(1000)
+                        }
+                    } else {
+                        // console.log(data)
+                        console.log("获取店铺升级蓝币气泡失败");
+                    }
+                }
+            } catch (e) {
+                $.logErr(e, resp);
+            } finally {
+                resolve(data);
+            }
+        })
+    })
+}
+//收取店铺升级蓝币气泡
+function smtg_receiveCoin_xh(userUpgradeBlueVosId) {
+    return new Promise((resolve) => {
+        console.log("正在收取店铺升级蓝币...");
+        $.get(taskUrl_xh('smtg_receiveCoin', {
+            "type": 5,
+            "id": `${userUpgradeBlueVosId}`,
+            "channel": "7"
+        }), async (err, resp, data) => {
+            try {
+                if (err) {
+                    console.log('\n东东超市: API查询请求失败 ‼️‼️')
+                    console.log(JSON.stringify(err));
+                } else {
+                    data = JSON.parse(data);
+                    if (data && data.data['bizCode'] === 0) {
+                        console.log(`收取成功，获得蓝币 ${data.data.result.receivedBlue} 个，共有蓝币 ${data.data.result.totalBlue} 个`)
+                    } else {
+                        console.log("收取失败")
+                    }
+                }
+            } catch (e) {
+                $.logErr(e, resp);
+            } finally {
+                resolve(data);
+            }
+        })
+    })
+}
 //查询有哪些货架
 function smtg_shopIndex() {
   return new Promise((resolve) => {

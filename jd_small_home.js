@@ -73,6 +73,7 @@ const JD_API_HOST = 'https://lkyl.dianpusoft.cn/api';
         continue
       }
       await smallHome();
+      await $.wait(30*1000)
     }
   }
   //await updateInviteCodeCDN('https://gitee.com/lxk0301/updateTeam/raw/master/shareCodes/jd_updateSmallHomeInviteCode.json');
