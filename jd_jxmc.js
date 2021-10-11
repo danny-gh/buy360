@@ -245,6 +245,9 @@ async function chickenLeg() {
 
 async function feedCabbage() {
   let k = 0;
+  let d = new Date();
+  let hour = d.getHours();
+  if(hour < 7){return;}
   $.cabbageCount = 0;
   $.coinCount = 0;
   await takeGetRequest('GetHomePageInfo');
