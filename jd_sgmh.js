@@ -32,10 +32,10 @@ console.log('\n====================Hello World====================\n')
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 let appId = '1EFRXxg' , homeDataFunPrefix = 'interact_template', collectScoreFunPrefix = 'harmony', message = ''
 let lotteryResultFunPrefix = homeDataFunPrefix, browseTime = 6
+let inviteCodeList = [];
 const inviteCodes = [''];
 const randomCount = $.isNode() ? 20 : 5;
 const notify = $.isNode() ? require('./sendNotify') : '';
-let merge = {}
 let myInviteCode;
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '';
@@ -54,7 +54,29 @@ const JD_API_HOST = `https://api.m.jd.com/client.action`;
     $.msg($.name, '【提示】请先获取cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/', {"open-url": "https://bean.m.jd.com/"});
     return;
   }
-  await requireConfig();
+  //await requireConfig();
+  for (let i = 0; i < cookiesArr.length; i++) {
+    cookie = cookiesArr[i];
+    if (cookie) {
+      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
+      $.index = i + 1;
+      $.isLogin = true;
+      $.nickName = '';
+      $.beans = 0
+      await TotalBean();
+      console.log(`\n******开始【京东账号${$.index}】${$.nickName || $.UserName}*********\n`);
+      if (!$.isLogin) {
+        $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/bean/signIndex.action`, {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
+
+        if ($.isNode()) {
+          await notify.sendNotify(`${$.name}cookie已失效 - ${$.UserName}`, `京东账号${$.index} ${$.UserName}\n请重新登录获取cookie`);
+        }
+        continue
+      }
+      await collectShareCode()
+    }
+  }
+
   for (let i = 0; i < cookiesArr.length; i++) {
     cookie = cookiesArr[i];
     if (cookie) {
@@ -65,7 +87,7 @@ const JD_API_HOST = `https://api.m.jd.com/client.action`;
       $.beans = 0
       message = ''
       await TotalBean();
-      await shareCodesFormat();
+      //await shareCodesFormat();
       console.log(`\n******开始【京东账号${$.index}】${$.nickName || $.UserName}*********\n`);
       if (!$.isLogin) {
         $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/bean/signIndex.action`, {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
@@ -82,8 +104,8 @@ const JD_API_HOST = `https://api.m.jd.com/client.action`;
 })()
   .catch((e) => $.logErr(e))
   .finally(() => $.done())
-//获取活动信息
-function interact_template_getHomeData(timeout = 0) {
+
+function collectShareCode(timeout = 0) {
   return new Promise((resolve) => {
     setTimeout( ()=>{
       let url = {
@@ -117,16 +139,82 @@ function interact_template_getHomeData(timeout = 0) {
             if (data.data.result.taskVos[i].taskName === '邀请好友助力') {
               console.log(`\n【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】${data.data.result.taskVos[i].assistTaskDetailVo.taskToken}\n`);
               myInviteCode = data.data.result.taskVos[i].assistTaskDetailVo.taskToken;
+              inviteCodeList.push(
+                {
+                  'name': $.UserName,
+                  'code': myInviteCode,
+                }
+              );
               const submitCodeRes = await submitCode();
               if (submitCodeRes && submitCodeRes.code === 200) {
                 console.log(`📦闪购盲盒-互助码提交成功！📦`);
               }else if (submitCodeRes.code === 300) {
                 console.log(`📦闪购盲盒-互助码已提交！📦`);
               }
-              for (let code of $.newShareCodes) {
-                if (!code) continue
-                await harmony_collectScore(code, data.data.result.taskVos[i].taskId);
-                await $.wait(2000)
+              break;
+            }
+          }
+        } catch (e) {
+          $.logErr(e, resp);
+        } finally {
+          resolve()
+        }
+      })
+    },timeout)
+  })
+}
+
+//获取活动信息
+function interact_template_getHomeData(timeout = 0) {
+  return new Promise((resolve) => {
+    setTimeout( ()=>{
+      let url = {
+        url : `${JD_API_HOST}`,
+        headers : {
+          'Origin' : `https://h5.m.jd.com`,
+          'Cookie' : cookie,
+          'Connection' : `keep-alive`,
+          'Accept' : `application/json, text/plain, */*`,
+          'Referer' : `https://h5.m.jd.com/babelDiy/Zeus/2WBcKYkn8viyxv7MoKKgfzmu7Dss/index.html`,
+          'Host' : `api.m.jd.com`,
+          'Accept-Encoding' : `gzip, deflate, br`,
+          'Accept-Language' : `zh-cn`
+        },
+        body : `functionId=${homeDataFunPrefix}_getHomeData&body={"appId":"${appId}","taskToken":""}&client=wh5&clientVersion=1.0.0`
+      }
+
+      $.post(url, async (err, resp, data) => {
+        try {
+          data = JSON.parse(data);
+          if (data.data.bizCode !== 0) {
+            console.log(data.data.bizMsg);
+            return
+          }
+          scorePerLottery = data.data.result.userInfo.scorePerLottery||data.data.result.userInfo.lotteryMinusScore
+          if (data.data.result.raiseInfo&&data.data.result.raiseInfo.levelList) scorePerLottery = data.data.result.raiseInfo.levelList[data.data.result.raiseInfo.scoreLevel];
+          //console.log(scorePerLottery)
+          for (let i = 0;i < data.data.result.taskVos.length;i ++) {
+            console.log("\n" + data.data.result.taskVos[i].taskType + '-' + data.data.result.taskVos[i].taskName  + '-' + (data.data.result.taskVos[i].status === 1 ? `已完成${data.data.result.taskVos[i].times}-未完成${data.data.result.taskVos[i].maxTimes}` : "全部已完成"))
+            //签到
+            if (data.data.result.taskVos[i].taskName === '邀请好友助力') {
+              /*
+              console.log(`\n【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】${data.data.result.taskVos[i].assistTaskDetailVo.taskToken}\n`);
+              myInviteCode = data.data.result.taskVos[i].assistTaskDetailVo.taskToken;
+              const submitCodeRes = await submitCode();
+              if (submitCodeRes && submitCodeRes.code === 200) {
+                console.log(`📦闪购盲盒-互助码提交成功！📦`);
+              }else if (submitCodeRes.code === 300) {
+                console.log(`📦闪购盲盒-互助码已提交！📦`);
+              }
+              */
+              for (let k = 0; k < inviteCodeList.length; k++) {
+                if (inviteCodeList[k].name === $.UserName) {
+                  continue;
+                } else {
+                  console.log(`\n${$.UserName}去助力${inviteCodeList[k].name},助力码：${inviteCodeList[k].code}\n`);
+                  await harmony_collectScore(inviteCodeList[k].code, data.data.result.taskVos[i].taskId);
+                  await $.wait(2000)
+                }
               }
             }
             else if (data.data.result.taskVos[i].status === 3) {
@@ -269,6 +357,7 @@ function showMsg() {
   })
 }
 
+/*
 function requireConfig() {
   return new Promise(async resolve => {
     console.log(`开始获取${$.name}配置文件\n`);
@@ -344,6 +433,7 @@ function readShareCode() {
     resolve()
   })
 }
+*/
 //提交互助码
 function submitCode() {
     return new Promise(async resolve => {

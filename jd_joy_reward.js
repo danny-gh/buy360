@@ -110,7 +110,8 @@ async function joyReward1() {
     let giftSaleInfos = null;
     d.setMinutes(59);
     d.setSeconds(59);
-    d.setMilliseconds(849);
+    //d.setMilliseconds(849);
+    d.setMilliseconds(800);
     let fireTime = d.getTime();
     d.setMilliseconds(999);
     let targetTime = d.getTime();

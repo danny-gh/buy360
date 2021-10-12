@@ -132,6 +132,7 @@ async function main() {
   await joinActive();
   await $.wait(2000)
   await getUserInfo()
+  await submitCode($.lhbCode);
 }
 //参与活动
 function joinActive() {
@@ -185,8 +186,9 @@ function getUserInfo() {
             if (data.Data.dwHelpedTimes === $.helpNum) {
               console.log(`${$.grades[$.grades.length - 1]}个阶梯红包已全部拆完\n`)
             } else {
-              console.log(`获取助力码成功：${data.Data.strUserPin}\n`);
               if (data.Data.strUserPin) {
+                console.log(`获取助力码成功：${data.Data.strUserPin}\n`);
+                $.lhbCode = data.Data.strUserPin;
                 $.packetIdArr.push({
                   strUserPin: data.Data.strUserPin,
                   userName: $.UserName
@@ -305,6 +307,38 @@ function getAuthorShareCode(url='https://raw.githubusercontent.com/he1pu/params/
         resolve(data || []);
       }
     })
+  })
+}
+//提交互助码
+function submitCode(shareCode) {
+    if (!shareCode || shareCode == undefined || shareCode.length<=0 ) {return;}
+    return new Promise(async resolve => {
+    $.get({url: `http://www.helpu.cf/jdcodes/submit.php?code=${shareCode}&type=jxlhb&user=${$.UserName}`, timeout: 10000}, (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} 提交助力码 API请求失败，请检查网路重试`)
+        } else {
+          if (data) {
+            //console.log(`随机取个${randomCount}码放到您固定的互助码后面(不影响已有固定互助)`)
+            data = JSON.parse(data);
+            if (data.code === 300) {
+                $.needSubmit = false;
+              console.log("京喜领88红包，互助码已提交");
+            }else if (data.code === 200) {
+                $.needSubmit = false;
+              console.log("京喜领88红包，互助码提交成功");
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve(data || {"code":500});
+      }
+    })
+    await $.wait(10000);
+    resolve({"code":500})
   })
 }
 
