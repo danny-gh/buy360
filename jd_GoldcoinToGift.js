@@ -10,7 +10,7 @@
 
 =================================Loon===================================
 [Script]
-cron "22 0,8 * * *" script-path=https://raw.githubusercontent.com/Aaron-lv/sync/jd_scripts/jd_GoldcoinToGift.js,tag=攒金币 赢大礼
+cron "22 0,7 * * *" script-path=https://raw.githubusercontent.com/Aaron-lv/sync/jd_scripts/jd_GoldcoinToGift.js,tag=攒金币 赢大礼
 
 ===================================Surge================================
 攒金币 赢大礼 = type=cron,cronexp="22 0,8 * * *",wake-system=1,timeout=3600,script-path=https://raw.githubusercontent.com/Aaron-lv/sync/jd_scripts/jd_GoldcoinToGift.js
