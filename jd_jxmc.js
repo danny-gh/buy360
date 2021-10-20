@@ -36,6 +36,13 @@ $.inviteCodeList = [];
 $.inviteCodeList_hb = [];
 let cookiesArr = [];
 let token;
+let cardinfo = {
+  "16":"小黄鸡",
+  "17":"辣子鸡",
+  "18":"未知",
+  "19":"未知"
+}
+
 $.appId = 10028;
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
@@ -151,6 +158,42 @@ async function pasture() {
           'max':false
         }
       );
+
+      if ($.homeInfo.maintaskId !== "pause") {
+        console.log(`开始初始化`)
+        $.step = $.homeInfo.maintaskId
+        await takeGetRequest('DoMainTask');
+        for (let i = 0; i < 20; i++) {
+          if ($.DoMainTask.maintaskId !== "pause") {
+            await $.wait(2000)
+            $.step = $.DoMainTask.maintaskId
+            await takeGetRequest('DoMainTask');
+          } else {
+            console.log(`初始化成功\n`)
+            break
+          }
+        }
+      }
+
+      await takeGetRequest('GetCardInfo');
+      if ($.GetCardInfo && $.GetCardInfo.cardinfo) {
+        let msg = '';
+        for (let vo of $.GetCardInfo.cardinfo) {
+          if (vo.currnum > 0) {
+            msg += `${vo.currnum}张${cardinfo[vo.cardtype]}卡片 `
+          }
+        }
+        console.log(`\n可抽奖次数：${$.GetCardInfo.times}${msg ? `,拥有卡片：${msg}` : ''}\n`)
+        if ($.GetCardInfo.times !== 0) {
+          console.log(`开始抽奖`)
+          for (let i = $.GetCardInfo.times; i > 0; i--) {
+            await $.wait(2000)
+            await takeGetRequest('DrawCard');
+          }
+          console.log('')
+        }
+      }
+
       await takeGetRequest('GetInviteStatus')
 
       for (let i = 0; i < $.homeInfo.petinfo.length; i++) {
@@ -416,14 +459,24 @@ async function takeGetRequest(type) {
       break;
     case 'GetInviteStatus':
         url = `https://m.jingxi.com/jxmc/operservice/GetInviteStatus?channel=7&sceneid=1001&activeid=jxmc_active_0001&activekey=null&jxmc_jstoken=${token.farm_jstoken}&timestamp=${token.timestamp}&phoneid=${token.phoneid}`;
-        // url += `&h5st=${decrypt(Date.now(), '', '', url)}&_=${Date.now() + 2}&sceneval=2&g_login_type=1&callback=jsonpCBK${String.fromCharCode(Math.floor(Math.random() * 26) + "A".charCodeAt(0))}&g_ty=ls`;
         break;
     case 'help_hb':
         url = `https://m.jingxi.com/jxmc/operservice/InviteEnroll?channel=7&sceneid=1001&activeid=jxmc_active_0001&activekey=null&sharekey=${$.oneCodeInfo.code}`
         url += `&jxmc_jstoken=${token.farm_jstoken}&timestamp=${token.timestamp}&phoneid=${token.phoneid}`;
         url += `&_stk=activeid%2Cactivekey%2Cchannel%2Cjxmc_jstoken%2Cphoneid%2Csceneid%2Csharekey%2Ctimestamp&_ste=1`;
-        // url += `&h5st=${decrypt(Date.now(), '', '', url)}&_=${Date.now() + 2}&sceneval=2&g_login_type=1&g_ty=ls`;
         break;
+    case 'DoMainTask':
+      url = `https://m.jingxi.com/jxmc/operservice/DoMainTask?channel=7&sceneid=1001&activeid=${$.activeid}&activekey=null&step=${$.step}&jxmc_jstoken=${token['farm_jstoken']}&timestamp=${token['timestamp']}&phoneid=${token['phoneid']}&_stk=activeid%2Cactivekey%2Cchannel%2Cjxmc_jstoken%2Cphoneid%2Csceneid%2Cstep%2Ctimestamp&_ste=1`
+      url += `&callback=jsonpCBK${String.fromCharCode(Math.floor(Math.random() * 26) + "A".charCodeAt(0))}`;
+      break;
+    case 'GetCardInfo':
+      url = `https://m.jingxi.com/jxmc/queryservice/GetCardInfo?channel=7&sceneid=1001&activeid=${$.activeid}&activekey=null&jxmc_jstoken=${token['farm_jstoken']}&timestamp=${token['timestamp']}&phoneid=${token['phoneid']}&_stk=activeid%2Cactivekey%2Cchannel%2Cjxmc_jstoken%2Cphoneid%2Csceneid%2Ctimestamp&_ste=1`
+      url += `&callback=jsonpCBK${String.fromCharCode(Math.floor(Math.random() * 26) + "A".charCodeAt(0))}`;
+      break;
+    case 'DrawCard':
+      url = `https://m.jingxi.com/jxmc/operservice/DrawCard?channel=7&sceneid=1001&activeid=${$.activeid}&activekey=null&jxmc_jstoken=${token['farm_jstoken']}&timestamp=${token['timestamp']}&phoneid=${token['phoneid']}&_stk=activeid%2Cactivekey%2Cchannel%2Cjxmc_jstoken%2Cphoneid%2Csceneid%2Ctimestamp&_ste=1`
+      url += `&callback=jsonpCBK${String.fromCharCode(Math.floor(Math.random() * 26) + "A".charCodeAt(0))}`;
+      break;
     default:
       console.log(`错误${type}`);
   }
@@ -630,6 +683,30 @@ function dealReturn(type, data) {
         }
         console.log(`红包助力：${JSON.stringify(data)}\n`);
         break;
+    case 'DoMainTask':
+      data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
+      if (data.ret === 0) {
+        $.DoMainTask = data.data;
+      }
+      break;
+    case 'GetCardInfo':
+      data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
+      if (data.ret === 0) {
+        $.GetCardInfo = data.data;
+      }
+      break;
+    case 'DrawCard':
+      data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
+      if (data.ret === 0) {
+        if (data.data.prizetype === 1) {
+          console.log(`抽奖获得：1张${cardinfo[data.data.cardtype]}卡片`)
+        } else if (data.data.prizetype === 3) {
+          console.log(`抽奖获得：${data.data.addcoins}金币`)
+        } else {
+          console.log(`抽奖获得：${JSON.stringify(data)}`)
+        }
+      }
+      break;
     default:
       console.log(`${type}异常：${JSON.stringify(data)}\n`);
       //console.log(JSON.stringify(data));
