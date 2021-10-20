@@ -15,7 +15,7 @@ exec("git fetch --all; git reset --hard origin/main; git pull", (error, stdout, 
 
 if(process.env.PWD==='/ql/scripts') {
   if (__dirname.indexOf('/ql/') > -1) {
-    exec('ql repo https://github.com/danny-gh/buy360.git "jd_|jx_|getJDCookie" "activity|jd_delCoupon" "^jd[^_]|USER|utils"', (error, stdout, stderr) => {
+    exec('ql repo https://github.com/danny-gh/buy360.git "jd_|jx_|getJDCookie" "activity|backup|jd_delCoupon" "^jd[^_]|USER|utils"', (error, stdout, stderr) => {
       console.log(stdout.trim())
     })
   }
