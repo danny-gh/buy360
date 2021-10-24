@@ -27,7 +27,7 @@ let cookiesArr = [], cookie = '';
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
 let appIdArr = ['1E1NXxq0', '1FV1VwKc'];
 let appNameArr = ['众筹许愿池', '惊喜大作战'];
-let appId, appName, res;
+let appId, appName;
 $.shareCode = [];
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
@@ -74,7 +74,7 @@ if ($.isNode()) {
   //   await $.wait(1000)
   //   res = await getAuthorShareCode('https://cdn.jsdelivr.net/gh/Aaron-lv/updateTeam@master/shareCodes/wish.json')
   // }
-  $.shareCode = [...$.shareCode, ...(res || [])]
+  //$.shareCode = [...$.shareCode, ...(res || [])]
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];

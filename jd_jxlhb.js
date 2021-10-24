@@ -1,23 +1,20 @@
 /*
 京喜领88元红包
-活动入口：京喜app-》我的-》京喜领88元红包
-助力逻辑：自己京东账号相互助力
+活动入口：京喜app -> 我的 -> 京喜领88元红包
+助力逻辑：优先内部互助，若有剩余次数助力池互助
 温馨提示：如提示助力火爆，可尝试寻找京东客服
 脚本兼容: Quantumult X, Surge, Loon, JSBox, Node.js
 ==============Quantumult X==============
 [task_local]
 #京喜领88元红包
-14 0,2 * * * https://raw.githubusercontent.com/he1pu/JDHelp/main/jd_jxlhb.js, tag=京喜领88元红包, img-url=https://raw.githubusercontent.com/Orz-3/mini/master/Color/jd.png, enabled=true
-
+14 0,2,11 * * * https://raw.githubusercontent.com/he1pu/JDHelp/main/jd_jxlhb.js, tag=京喜领88元红包, img-url=https://raw.githubusercontent.com/Orz-3/mini/master/Color/jd.png, enabled=true
 ==============Loon==============
 [Script]
-cron "14 0,2 * * *" script-path=https://raw.githubusercontent.com/he1pu/JDHelp/main/jd_jxlhb.js,tag=京喜领88元红包
-
+cron "14 0,2,11 * * *" script-path=https://raw.githubusercontent.com/he1pu/JDHelp/main/jd_jxlhb.js,tag=京喜领88元红包
 ================Surge===============
-京喜领88元红包 = type=cron,cronexp="14 0,2 * * *",wake-system=1,timeout=3600,script-path=https://raw.githubusercontent.com/he1pu/JDHelp/main/jd_jxlhb.js
-
+京喜领88元红包 = type=cron,cronexp="14 0,2,11 * * *",wake-system=1,timeout=3600,script-path=https://raw.githubusercontent.com/he1pu/JDHelp/main/jd_jxlhb.js
 ===============小火箭==========
-京喜领88元红包 = type=cron,script-path=https://raw.githubusercontent.com/he1pu/JDHelp/main/jd_jxlhb.js, cronexpr="14 0,2 * * *", timeout=3600, enable=true
+京喜领88元红包 = type=cron,script-path=https://raw.githubusercontent.com/he1pu/JDHelp/main/jd_jxlhb.js, cronexpr="14 0,2,11 * * *", timeout=3600, enable=true
  */
 const $ = new Env('京喜领88元红包');
 const notify = $.isNode() ? require('./sendNotify') : {};
@@ -41,11 +38,10 @@ const BASE_URL = 'https://m.jingxi.com/cubeactive/steprewardv3'
     return;
   }
   console.log('京喜领88元红包\n' +
-      '活动入口：京喜app-》我的-》京喜领88元红包\n' +
-      '助力逻辑：自己京东账号相互助力\n' +
+      '活动入口：京喜app -> 我的 -> 京喜领88元红包\n' +
+      '助力逻辑：优先内部互助，若有剩余次数助力池互助\n' +
       '温馨提示：如提示助力火爆，可尝试寻找京东客服')
 
-  //开启红包,获取互助码
   for (let i = 0; i < cookiesArr.length; i++) {
     cookie = cookiesArr[i];
     $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
@@ -68,9 +64,8 @@ const BASE_URL = 'https://m.jingxi.com/cubeactive/steprewardv3'
     await main();
   }
   //互助
-  //$.authorMyShareIds = await getAuthorShareCode();
-  console.log(`\n\n自己京东账号助力码：\n${JSON.stringify($.packetIdArr)}\n\n`);
-  console.log(`\n开始助力：自己京东相互助力\n`)
+  //console.log(`\n\n自己京东账号助力码：\n${JSON.stringify($.packetIdArr)}\n\n`);
+  console.log(`\n开始内部互助\n`)
   for (let i = 0; i < cookiesArr.length; i++) {
     cookie = cookiesArr[i];
     $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1]);
@@ -92,16 +87,17 @@ const BASE_URL = 'https://m.jingxi.com/cubeactive/steprewardv3'
         continue
       }
     }
+    await readShareCode();
     /*
-    if ($.canHelp && ($.authorMyShareIds && $.authorMyShareIds.length)) {
-      console.log(`\n【${$.UserName}】有剩余助力机会，开始助力作者\n`)
-      for (let j = 0; j < $.authorMyShareIds.length && $.canHelp; j++) {
-        console.log(`【${$.UserName}】去助力作者的邀请码：${$.authorMyShareIds[j]}`);
+    if ($.canHelp &&  (codePool && codePool.length)) {
+      console.log(`\n【${$.UserName}】有剩余助力机会，开始互助池互助\n`)
+      for (let j = 0; j < codePool.length && $.canHelp; j++) {
+        console.log(`【${$.UserName}】去助力：${codePool[j]}`);
         $.max = false;
-        await enrollFriend($.authorMyShareIds[j]);
+        await enrollFriend(codePool[j]);
         await $.wait(5000);
         if ($.max) {
-          $.authorMyShareIds.splice(j, 1)
+          codePool.splice(j, 1)
           j--
           continue
         }
@@ -279,39 +275,6 @@ function openRedPack(strPin, grade) {
   })
 }
 
-function getAuthorShareCode(url='https://raw.githubusercontent.com/he1pu/params/main/codes.json') {
-  return new Promise(resolve => {
-    const options = {
-      url: `${url}?${new Date()}`, "timeout": 10000, headers: {
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/87.0.4280.88"
-      }
-    };
-    if ($.isNode() && process.env.TG_PROXY_HOST && process.env.TG_PROXY_PORT) {
-      const tunnel = require("tunnel");
-      const agent = {
-        https: tunnel.httpsOverHttp({
-          proxy: {
-            host: process.env.TG_PROXY_HOST,
-            port: process.env.TG_PROXY_PORT * 1
-          }
-        })
-      }
-      Object.assign(options, { agent })
-    }
-    $.get(options, async (err, resp, data) => {
-      try {
-        if (err) {
-        } else {
-          if (data) data = JSON.parse(data).jxlhb
-        }
-      } catch (e) {
-        // $.logErr(e, resp)
-      } finally {
-        resolve(data || []);
-      }
-    })
-  })
-}
 //提交互助码
 function submitCode(shareCode) {
     if (!shareCode || shareCode == undefined || shareCode.length<=0 ) {return;}
@@ -332,6 +295,33 @@ function submitCode(shareCode) {
                 $.needSubmit = false;
               console.log("京喜领88红包，互助码提交成功");
             }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve(data || {"code":500});
+      }
+    })
+    await $.wait(10000);
+    resolve({"code":500})
+  })
+}
+function readShareCode() {
+  return new Promise(async resolve => {
+    $.get({
+      url: `http://www.helpu.cf/jdcodes/getcode.php?type=jxlhb&num=30`,
+      'timeout': 10000
+    }, (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} API请求失败，请检查网路重试`)
+        } else {
+          if (data) {
+            console.log('互助池读取成功');
+            data = JSON.parse(data);
+            codePool = data.data;
           }
         }
       } catch (e) {
