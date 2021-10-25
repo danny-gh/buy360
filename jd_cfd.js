@@ -98,6 +98,7 @@ $.appId = 10028;
         if (!$.canHelp) break
       }
     }
+    await readShareCode();
     /*
     if (!$.canHelp) continue
     await readShareCode();

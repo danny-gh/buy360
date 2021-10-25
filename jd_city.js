@@ -28,7 +28,7 @@ if ($.isNode()) {
   cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
 }
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
-//let inviteCodes = ['RtGKzLijQ1ujedaeE9Ji0zhNBfX5NNoAxxpNOCnj34CSs0IBUA','RtGKgI_jNn3DCdLCVolimj8QCfWxFaTVbK--9-kTiCX_9LHD']
+let inviteCodes = ['RtGKzLijQ1ujedaeE9Ji0zhNBfX5NNoAxxpNOCnj34CSs0IBUA','RtGKgI_jNn3DCdLCVolimj8QCfWxFaTVbK--9-kTiCX_9LHD']
 let inviteCodeList = [];
 $.shareCodesArr = [];
 
@@ -80,7 +80,7 @@ $.shareCodesArr = [];
       message = '';
       console.log(`\n******开始【京东账号${$.index}】${$.nickName || $.UserName}*********\n`);
       await getUA()
-      //await shareCodesFormat()
+      await shareCodesFormat()
       for (let i = 0; i < inviteCodeList.length && true; ++i) {
         //console.log(`\n开始助力 【${$.newShareCodes[i]}】`)
         if (inviteCodeList[i].name === $.UserName) {
