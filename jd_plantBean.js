@@ -428,7 +428,12 @@ async function doTask() {
 function showTaskProcess() {
   return new Promise(async resolve => {
     await plantBeanIndex();
-    $.taskList = $.plantBeanIndexResult.data.taskList;
+    if ($.plantBeanIndexResult?.data?.taskList) {
+      $.taskList = $.plantBeanIndexResult.data.taskList;  
+    } else {
+      $.taskList = [];
+      console.log("未获取到任务")
+    }
     if ($.taskList && $.taskList.length > 0) {
       console.log("     任务   进度");
       for (let item of $.taskList) {
