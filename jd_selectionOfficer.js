@@ -1,20 +1,10 @@
 
 /*
-10.20~11.13 选品官 [jd_selectionOfficer.js]
-
-无开卡，有加购
-第一个账号助力作者 其他内部互助
-————————————————
-入口：APP-美妆馆-右侧浮窗
-
-============Quantumultx===============
-[task_local]
-#10.20~11.13 选品官
-27 4,14 1-13,22-31 10,11 * https://raw.githubusercontent.com/he1pu/JDHelp/main/jd_selectionOfficer.js, tag=10.20~11.13 选品官, enabled=true
-
-*/
-
-const $ = new Env('10.20~11.13 选品官');
+* 活动：APP-美妆馆-右侧浮窗
+cron 23 9,10 * * * https://raw.githubusercontent.com/star261/jd/main/scripts/jd_selectionOfficer.js
+* 说明：脚本内互助，无开卡，有加购
+* */
+const $ = new Env('选品官');
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 const notify = $.isNode() ? require('./sendNotify') : '';
 let cookiesArr = [];
@@ -174,7 +164,7 @@ async function doTask(){
                 await $.wait(1000);
             }
         }
-        if($.oneTask.type === 8){
+        if($.oneTask.type === 8 && ["card","car"].includes(process.env.FS_LEVEL)){
             let subList = $.oneTask.info;
             for (let j = 0; j < subList.length; j++) {
                 $.subListInfo = subList[j];
@@ -235,9 +225,6 @@ async function takePostRequest(type) {
             break;
         case 'invite_friend':
             body = `{"inviter_id":"${$.oneInvite.inviter_id}"}`;
-            if($.index==1) {
-                body = `{"inviter_id":"61722a770528934578"}`;
-            }
             break;
         default:
             console.log(`错误${type}`);

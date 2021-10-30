@@ -125,12 +125,12 @@ async function cfd() {
   try {
     nowTimes = new Date(new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 + 8 * 60 * 60 * 1000)
     let beginInfo = await getUserInfo();
-    if (beginInfo.LeadInfo.ddwFundTargTm === 2) {
+    if (beginInfo.LeadInfo.dwLeadType === 2) {
       console.log(`还未开通活动，尝试初始化`)
       await noviceTask()
       await $.wait(2000)
       beginInfo = await getUserInfo(false);
-      if (beginInfo.LeadInfo.ddwFundTargTm !== 2) {
+      if (beginInfo.LeadInfo.dwLeadType !== 2) {
         console.log(`初始化成功\n`)
       } else {
         console.log(`初始化失败\n`)
@@ -143,10 +143,12 @@ async function cfd() {
     let XBDetail = beginInfo.XbStatus.XBDetail.filter((x) => x.dwRemainCnt !== 0)
     if (XBDetail.length !== 0) {
       console.log(`开始寻宝`)
-      for (let key of Object.keys(beginInfo.XbStatus.XBDetail)) {
-        let vo = beginInfo.XbStatus.XBDetail[key]
+      $.break = false
+      for (let key of Object.keys(XBDetail)) {
+        let vo = XBDetail[key]
         await $.wait(2000)
         await TreasureHunt(vo.strIndex)
+        if ($.break) break
       }
     } else {
       console.log(`暂无宝物`)
@@ -291,34 +293,38 @@ async function cfd() {
 
 // 寻宝
 function TreasureHunt(strIndex) {
-   return new Promise((resolve) => {
-     $.get(taskUrl(`user/TreasureHunt`, `strIndex=${strIndex}`), (err, resp, data) => {
-       try {
-         if (err) {
-           console.log(`${JSON.stringify(err)}`)
-           console.log(`${$.name} TreasureHunt API请求失败，请检查网路重试`)
-         } else {
-           data = JSON.parse(data);
-           if (data.iRet === 0) {
-             if (data.AwardInfo.dwAwardType === 0) {
-               console.log(`${data.strAwardDesc}，获得 ${data.AwardInfo.ddwValue} 金币`)
-             } else if (data.AwardInfo.dwAwardType === 1) {
-               console.log(`${data.strAwardDesc}，获得 ${data.AwardInfo.ddwValue} 财富`)
-             } else {
-               console.log(JSON.stringify(data))
-             }
-           } else {
-             console.log(`寻宝失败：${data.sErrMsg}`)
-           }
-         }
-       } catch (e) {
-         $.logErr(e, resp);
-       } finally {
-         resolve();
-       }
-     })
-   })
- }
+  return new Promise((resolve) => {
+    $.get(taskUrl(`user/TreasureHunt`, `strIndex=${strIndex}`), (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} TreasureHunt API请求失败，请检查网路重试`)
+        } else {
+          data = JSON.parse(data);
+          if (data.iRet === 0) {
+            if (data.AwardInfo.dwAwardType === 0) {
+              console.log(`${data.strAwardDesc}，获得 ${data.AwardInfo.ddwValue} 金币`)
+            } else if (data.AwardInfo.dwAwardType === 1) {
+              console.log(`${data.strAwardDesc}，获得 ${data.AwardInfo.ddwValue} 财富`)
+              console.log(JSON.stringify(data))
+            } else if (data.AwardInfo.dwAwardType === 4) {
+              console.log(`${data.strAwardDesc}，获得 ${data.AwardInfo.strPrizePrice} 红包`)
+            } else {
+              console.log(JSON.stringify(data))
+            }
+          } else {
+            console.log(`寻宝失败：${data.sErrMsg}`)
+            $.break = true
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp);
+      } finally {
+        resolve();
+      }
+    })
+  })
+}
 
 // 合成月饼
 async function composeGameState(type = true) {
@@ -1068,7 +1074,7 @@ async function getActTask(type = true) {
           if (type) {
             for (let key of Object.keys(data.Data.TaskList)) {
               let vo = data.Data.TaskList[key]
-              if ([1, 2].includes(vo.dwOrderId) && (vo.dwCompleteNum !== vo.dwTargetNum)) {
+              if ([1, 2].includes(vo.dwOrderId) && (vo.dwCompleteNum !== vo.dwTargetNum) && vo.dwTargetNum < 10) {
                 console.log(`开始【🐮牛牛任务】${vo.strTaskName}`)
                 for (let i = vo.dwCompleteNum; i < vo.dwTargetNum; i++) {
                   console.log(`【🐮牛牛任务】${vo.strTaskName} 进度：${i + 1}/${vo.dwTargetNum}`)
@@ -1285,7 +1291,7 @@ async function getBuildInfo(body, buildList, type = true) {
             const body = `strBuildIndex=${data.strBuildIndex}&dwType=1`
             let collectCoinRes = await collectCoin(body)
             console.log(`【${buildNmae}】收集${collectCoinRes.ddwCoin}金币`)
-            await $.wait(2000)
+            await $.wait(3000)
             await getUserInfo(false)
             console.log(`升级建筑`)
             console.log(`【${buildNmae}】当前等级：${buildList.dwLvl}`)
@@ -1293,6 +1299,7 @@ async function getBuildInfo(body, buildList, type = true) {
             if(data.dwCanLvlUp > 0 && $.info.ddwCoinBalance >= (data.ddwNextLvlCostCoin * 3)) {
               console.log(`【${buildNmae}】满足升级条件，开始升级`)
               const body = `ddwCostCoin=${data.ddwNextLvlCostCoin}&strBuildIndex=${data.strBuildIndex}`
+              await $.wait(2000)
               let buildLvlUpRes = await buildLvlUp(body)
               if (buildLvlUpRes.iRet === 0) {
                 console.log(`【${buildNmae}】升级成功：获得${data.ddwLvlRich}财富\n`)
@@ -1383,12 +1390,18 @@ function helpByStage(shareCodes) {
           } else if (data.iRet === 2235 || data.sErrMsg === '今日助力次数达到上限，明天再来帮忙吧~') {
             console.log(`助力失败：${data.sErrMsg}`)
             $.canHelp = false
+          } else if (data.iRet === 2232 || data.sErrMsg === '分享链接已过期') {
+            console.log(`助力失败：${data.sErrMsg}`)
+            $.delcode = true
           } else if (data.iRet === 9999 || data.sErrMsg === '您还没有登录，请先登录哦~') {
             console.log(`助力失败：${data.sErrMsg}`)
             $.canHelp = false
           } else if (data.iRet === 2229 || data.sErrMsg === '助力失败啦~') {
-            console.log(`助力失败：您的账号或被助力的账号可能已黑，请联系客服`)
-            // $.canHelp = false
+            console.log(`助力失败：您的账号已黑`)
+            $.canHelp = false
+          } else if (data.iRet === 2190 || data.sErrMsg === '达到助力上限') {
+            console.log(`助力失败：${data.sErrMsg}`)
+            $.delcode = true
           } else {
             console.log(`助力失败：${data.sErrMsg}`)
           }
@@ -1438,7 +1451,7 @@ function helpByStage(shareCodes) {
 // 获取用户信息
 function getUserInfo(showInvite = true) {
   return new Promise(async (resolve) => {
-    $.get(taskUrl(`user/QueryUserInfo`, `ddwTaskId=&strShareId=&strMarkList=${escape('guider_step,collect_coin_auth,guider_medal,guider_over_flag,build_food_full,build_sea_full,build_shop_full,build_fun_full,medal_guider_show,guide_guider_show,guide_receive_vistor,daily_task,guider_daily_task')}&strPgUUNum=${token['farm_jstoken']}&strPgtimestamp=${token['timestamp']}&strPhoneID=${token['phoneid']}`), (err, resp, data) => {
+    $.get(taskUrl(`user/QueryUserInfo`, `ddwTaskId=&strShareId=&strMarkList=${escape('guider_step,collect_coin_auth,guider_medal,guider_over_flag,build_food_full,build_sea_full,build_shop_full,build_fun_full,medal_guider_show,guide_guider_show,guide_receive_vistor,daily_task,guider_daily_task')}&strPgUUNum=${token['farm_jstoken']}&strPgtimestamp=${token['timestamp']}&strPhoneID=${token['phoneid']}`), async (err, resp, data) => {
       try {
         if (err) {
           console.log(`${JSON.stringify(err)}`)
@@ -1466,6 +1479,7 @@ function getUserInfo(showInvite = true) {
             console.log(`\n【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】${strMyShareId}\n\n`);
             $.shareCodes.push(strMyShareId)
             submitCode(strMyShareId, $.UserName);
+            await uploadShareCode(strMyShareId)
           }
           $.info = {
             ...$.info,
@@ -1889,6 +1903,42 @@ function submitCode(myInviteCode, user) {
     resolve({"code":500})
   })
 }
+
+function uploadShareCode(code) {
+  return new Promise(async resolve => {
+    $.post({url: `http://${randomString(40)}.transfer.nz.lu/upload/cfd?code=${code}&ptpin=${encodeURIComponent(encodeURIComponent($.UserName))}`, timeout: 10000}, (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(JSON.stringify(err))
+          console.log(`${$.name} uploadShareCode API请求失败，请检查网路重试`)
+        } else {
+          if (data) {
+            if (data === 'OK') {
+              console.log(`已自动提交助力码\n`)
+            } else if (data === 'error') {
+              console.log(`助力码格式错误，乱玩API是要被打屁屁的~\n`)
+            } else if (data === 'full') {
+              console.log(`车位已满，请等待下一班次\n`)
+            } else if (data === 'exist') {
+              console.log(`助力码已经提交过了~\n`)
+            } else if (data === 'not in whitelist') {
+              console.log(`提交助力码失败，此用户不在白名单中\n`)
+            } else {
+              console.log(`未知错误：${data}\n`)
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve(data);
+      }
+    })
+    await $.wait(10000);
+    resolve()
+  })
+}
+
 function readShareCode() {
   return new Promise(async resolve => {
     $.get({
