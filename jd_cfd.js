@@ -31,7 +31,7 @@ $.notifyTime = $.getdata("cfd_notifyTime");
 $.result = [];
 $.shareCodes = [];
 let cookiesArr = [], cookie = '', token = '';
-let UA, UAInfo = {}
+let UA, UAInfo = {};
 let nowTimes;
 let codePool;
 
@@ -45,7 +45,7 @@ if ($.isNode()) {
 } else {
   cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
 }
-$.appId = 10028;
+$.appId = 10032;
 !(async () => {
   //await requireConfig();
   if (!cookiesArr[0]) {
@@ -159,8 +159,12 @@ async function cfd() {
     await getTakeAggrPage('sign')
     
     //小程序每日签到
-     await $.wait(2000)
-     await getTakeAggrPage('wxsign')
+    await $.wait(2000)
+    await getTakeAggrPage('wxsign')
+
+    //使用道具
+    await $.wait(2000)
+    await GetPropCardCenterInfo()
 
     //助力奖励
     await $.wait(2000)
@@ -252,10 +256,6 @@ async function cfd() {
     await $.wait(2000)
     await queryRubbishInfo()
 
-    //雇导游
-    await $.wait(2000);
-    await employTourGuideInfo();
-
     console.log(`\n做任务`)
     //牛牛任务
     await $.wait(2000)
@@ -273,6 +273,10 @@ async function cfd() {
     await $.wait(2000);
     await browserTask(1);
 
+    //卡片任务
+    await $.wait(2000);
+    await getPropTask();
+
     await $.wait(2000);
     const endInfo = await getUserInfo(false);
     $.result.push(
@@ -289,6 +293,68 @@ async function cfd() {
   } catch (e) {
     $.logErr(e)
   }
+}
+
+// 使用道具
+function GetPropCardCenterInfo() {
+  return new Promise((resolve) => {
+    $.get(taskUrl(`user/GetPropCardCenterInfo`), async (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(JSON.stringify(err))
+          console.log(`${$.name} GetPropCardCenterInfo API请求失败，请检查网路重试`)
+        } else {
+          data = JSON.parse(data);
+          if (data.iRet === 0) {
+            console.log(`使用道具卡`)
+            if (data.cardInfo.dwWorkingType === 0) {
+              $.canuse = false;
+              for (let key of Object.keys(data.cardInfo.coincard)) {
+                let vo = data.cardInfo.coincard[key]
+                if (vo.dwCardNums > 0) {
+                  $.canuse = true;
+                  await UsePropCard(vo.strCardTypeIndex)
+                  break;
+                }
+              }
+              if (!$.canuse) console.log(`无可用道具卡\n`)
+            } else {
+              console.log(`有在使用中的道具卡，跳过使用\n`)
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp);
+      } finally {
+        resolve();
+      }
+    })
+  })
+}
+function UsePropCard(strCardTypeIndex) {
+  return new Promise((resolve) => {
+    let dwCardType = strCardTypeIndex.split("_")[0];
+    $.get(taskUrl(`user/UsePropCard`, `dwCardType=${dwCardType}&strCardTypeIndex=${encodeURIComponent(strCardTypeIndex)}`), (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(JSON.stringify(err))
+          console.log(`${$.name} UsePropCard API请求失败，请检查网路重试`)
+        } else {
+          data = JSON.parse(data);
+          if (data.iRet === 0) {
+            let cardName = strCardTypeIndex.split("_")[1];
+            console.log(`使用道具卡【${cardName}】成功\n`)
+          } else {
+            console.log(`使用道具卡失败：${JSON.stringify(data)}\n`)
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp);
+      } finally {
+        resolve();
+      }
+    })
+  })
 }
 
 // 寻宝
@@ -1511,6 +1577,38 @@ function getUserInfo(showInvite = true) {
   })
 }
 
+function getPropTask() {
+  return new Promise((resolve) => {
+    $.get(taskUrl(`story/GetPropTask`), async (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} getPropTask API请求失败，请检查网路重试`)
+        } else {
+          data = JSON.parse(data);
+          for (let key of Object.keys(data.Data.TaskList)) {
+            let vo = data.Data.TaskList[key]
+            if (vo.dwCompleteNum < vo.dwTargetNum) {
+              await doTask(vo.ddwTaskId, 3)
+              await $.wait(2000)
+            } else {
+              if (vo.dwAwardStatus !== 1) {
+                console.log(`【${vo.strTaskName}】已完成，去领取奖励`)
+                await $.wait(2000)
+                await awardTask(2, vo)
+              }
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp);
+      } finally {
+        resolve();
+      }
+    })
+  })
+}
+
 //任务
 function getTaskList(taskType) {
   return new Promise(async (resolve) => {
@@ -1607,41 +1705,23 @@ function browserTask(taskType) {
 //做任务
 function doTask(taskId, type = 1) {
   return new Promise(async (resolve) => {
-    switch (type) {
-      case 1:
-        $.get(taskListUrl(`DoTask`, `taskId=${taskId}`), (err, resp, data) => {
-          try {
-            if (err) {
-              console.log(`${JSON.stringify(err)}`)
-              console.log(`${$.name} DoTask API请求失败，请检查网路重试`)
-            } else {
-              data = JSON.parse(data);
-            }
-          } catch (e) {
-            $.logErr(e, resp)
-          } finally {
-            resolve()
-          }
-        })
-        break
-      case 2:
-        $.get(taskListUrl(`DoTask`, `taskId=${taskId}`, `jxbfddch`), (err, resp, data) => {
-          try {
-            if (err) {
-              console.log(`${JSON.stringify(err)}`)
-              console.log(`${$.name} DoTask API请求失败，请检查网路重试`)
-            } else {
-              data = JSON.parse(data);
-            }
-          } catch (e) {
-            $.logErr(e, resp)
-          } finally {
-            resolve()
-          }
-        })
-      default:
-        break
-    }
+    let bizCode = `jxbfd`;
+    if (type === 2) bizCode = `jxbfddch`;
+    if (type === 3) bizCode = `jxbfdprop`;
+    $.get(taskListUrl(`DoTask`, `taskId=${taskId}`, bizCode), (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} DoTask API请求失败，请检查网路重试`)
+        } else {
+          data = JSON.parse(data);
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve()
+      }
+    })
   })
 }
 
@@ -1649,6 +1729,7 @@ function doTask(taskId, type = 1) {
 function awardTask(taskType, taskinfo) {
   return new Promise((resolve) => {
     const {taskId, taskName} = taskinfo;
+    const {ddwTaskId, strTaskName} = taskinfo;
     switch (taskType) {
       case 0://日常任务
         $.get(taskListUrl(`Award`, `taskId=${taskId}`), (err, resp, data) => {
@@ -1694,6 +1775,26 @@ function awardTask(taskType, taskinfo) {
           }
         });
         break
+      case 2:
+        $.get(taskListUrl(`Award`, `taskId=${ddwTaskId}`, `jxbfdprop`), (err, resp, data) => {
+          try {
+            if (err) {
+              console.log(`${JSON.stringify(err)}`)
+              console.log(`${$.name} Award API请求失败，请检查网路重试`)
+            } else {
+              const {msg, ret, data: {prizeInfo = ''} = {}} = JSON.parse(data);
+              if(msg.indexOf('活动太火爆了') !== -1) {
+                console.log(`活动太火爆了`)
+              } else {
+                console.log(`【领卡片奖励】${strTaskName} 获得 ${JSON.parse(prizeInfo).CardInfo.CardList[0].strCardName}\n${$.showLog ? data : ''}`);
+              }
+            }
+          } catch (e) {
+            $.logErr(e, resp);
+          } finally {
+            resolve();
+          }
+        });
       default:
         break
     }
@@ -1906,7 +2007,7 @@ function submitCode(myInviteCode, user) {
 
 function uploadShareCode(code) {
   return new Promise(async resolve => {
-    $.post({url: `http://${randomString(40)}.transfer.nz.lu/upload/cfd?code=${code}&ptpin=${encodeURIComponent(encodeURIComponent($.UserName))}`, timeout: 10000}, (err, resp, data) => {
+    $.post({url: `https://transfer.nz.lu/upload/cfd?code=${code}&ptpin=${encodeURIComponent(encodeURIComponent($.UserName))}`, timeout: 30 * 1000}, (err, resp, data) => {
       try {
         if (err) {
           console.log(JSON.stringify(err))

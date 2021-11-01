@@ -88,20 +88,20 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
         }
       }
     }
-    if ($.canHelp && ($.authorMyShareIds && $.authorMyShareIds.length)) {
-      console.log(`\n\n有剩余助力机会则给作者进行助力`);
-      for (let j = 0; j < $.authorMyShareIds.length && $.canHelp; j++) {
-        console.log(`\n账号 ${$.index} ${$.UserName} 开始给作者 ${$.authorMyShareIds[j]} 进行助力`)
-        $.max = false;
-        await jinli_h5assist($.authorMyShareIds[j]);
-        await $.wait(2000)
-        if ($.max) {
-          $.authorMyShareIds.splice(j, 1)
-          j--
-          continue
-        }
-      }
-    }
+    // if ($.canHelp && ($.authorMyShareIds && $.authorMyShareIds.length)) {
+    //   console.log(`\n\n有剩余助力机会则给作者进行助力`);
+    //   for (let j = 0; j < $.authorMyShareIds.length && $.canHelp; j++) {
+    //     console.log(`\n账号 ${$.index} ${$.UserName} 开始给作者 ${$.authorMyShareIds[j]} 进行助力`)
+    //     $.max = false;
+    //     await jinli_h5assist($.authorMyShareIds[j]);
+    //     await $.wait(2000)
+    //     if ($.max) {
+    //       $.authorMyShareIds.splice(j, 1)
+    //       j--
+    //       continue
+    //     }
+    //   }
+    // }
   }
 })()
     .catch((e) => {
@@ -113,9 +113,9 @@ const JD_API_HOST = 'https://api.m.jd.com/api';
 
 async function redPacket() {
   try {
-    //await doLuckDrawFun();//券后9.9抽奖
-    //await taskHomePage();//查询任务列表
-    //await doTask();//领取任务，做任务，领取红包奖励
+    await doLuckDrawFun();//券后9.9抽奖
+    await taskHomePage();//查询任务列表
+    await doTask();//领取任务，做任务，领取红包奖励
     await h5activityIndex();//查询红包基础信息
     await red();//红包任务(发起助力红包,领取助力红包等)
     await h5activityIndex();
