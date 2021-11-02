@@ -25,9 +25,9 @@ let message = '', allMessage = '';
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '';
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
-let appIdArr = ['1E1NXxq0', '1FV1VwKc', '1FFRWxaY'];
-let appNameArr = ['众筹许愿池', '惊喜大作战', '荣耀钞能力'];
-let appId, appName, res;
+let appIdArr = ['1E1NXxq0', '1FV1VwKc', '1FFRWxaY', '1FFVQyqw', '1FV1ZwKY'];
+ let appNameArr = ['众筹许愿池', '惊喜大作战', '荣耀钞能力', '1111点心动', '好物好生活'];
+let appId, appName;
 $.shareCode = [];
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
@@ -63,7 +63,7 @@ if ($.isNode()) {
       for (let j = 0; j < appIdArr.length; j++) {
         appId = appIdArr[j]
         appName = appNameArr[j]
-        console.log(`\n开始第${j + 1}个活动：${appName}\n`)
+        console.log(`开始第${j + 1}个活动：${appName}\n`)
         await jd_wish();
       }
     }
@@ -183,6 +183,22 @@ async function healthyDay_getHomeData(type = true) {
                           await $.wait(vo.waitDuration * 1000)
                         }
                         await harmony_collectScore({"appId":appId,"taskToken":shoppingActivityVos.taskToken,"taskId":vo.taskId,"actionType":"0"})
+                      }
+                    }
+                  } else if (vo.taskType === 15) {
+                    for (let key of Object.keys(vo.productInfoVos)) {
+                      let productInfoVos = vo.productInfoVos[key]
+                      if (productInfoVos.status !== 2) {
+                        console.log(`【${productInfoVos.skuName}】${vo.subTitleName}`)
+                        await harmony_collectScore({"appId":appId,"taskToken":productInfoVos.taskToken,"taskId":vo.taskId,"actionType":"0"})
+                      }
+                    }
+                  } else if (vo.taskType === 21) {
+                    for (let key of Object.keys(vo.brandMemberVos)) {
+                      let brandMemberVos = vo.brandMemberVos[key]
+                      if (brandMemberVos.status !== 2) {
+                        console.log(`【${brandMemberVos.title}】${vo.subTitleName}`)
+                        await harmony_collectScore({"appId":appId,"taskToken":brandMemberVos.taskToken,"taskId":vo.taskId,"actionType":"0"})
                       }
                     }
                   } else if (vo.taskType === 14) {

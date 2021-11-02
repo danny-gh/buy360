@@ -54,7 +54,7 @@ if ($.isNode()) {
 } else {
   cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
 }
-$.appId = 10028;
+$.appId = 10032;
 !(async () => {
   await requireConfig();
   if (!cookiesArr[0]) {
