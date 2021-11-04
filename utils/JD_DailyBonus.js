@@ -16,7 +16,7 @@ var Key = ''; //该参数已废弃; 仅用于下游脚本的兼容, 请使用jso
 
 var DualKey = ''; //该参数已废弃; 仅用于下游脚本的兼容, 请使用json串数据  ↓
 
-var OtherKey = `[{"cookie":"pt_key=AAJhXtzCADDtm5XAbN3DxM0Erm-Xj49ohT8YbKH2gsGEZbC2Wl7htGIXMZ5l7YixOCxpzc2JXhc; pt_pin=jd_nMAxZptoatnN;","jrBody":""}]`; //无限账号Cookie json串数据, 请严格按照json格式填写, 具体格式请看以下样例:
+var OtherKey = ``; //无限账号Cookie json串数据, 请严格按照json格式填写, 具体格式请看以下样例:
 
 
 var LogDetails = false; //是否开启响应日志, true则开启
@@ -40,7 +40,11 @@ var KEY = '';
 const Faker = require('./JDSignValidator')
 const zooFaker = require('./JDJRValidator_Pure')
 let fp = '', eid = '', md5
-
+let invoke_key = 'q8DNJdpcfRQ69gIx';
+try{
+  let hConfig = require('./HConfig.js')
+  invoke_key = hConfig.invokeKey
+}catch(e){}
 $nobyda.get = zooFaker.injectToRequest2($nobyda.get.bind($nobyda), 'channelSign')
 $nobyda.post = zooFaker.injectToRequest2($nobyda.post.bind($nobyda), 'channelSign')
 
@@ -754,9 +758,9 @@ function JDUserSign1(s, key, title, body) {
 async function JDUserSign2(s, key, title, tid, acData) {
   await new Promise(resolve => {
     let lkt = new Date().getTime()
-    let lks = md5('' + 'JL1VTNRadM68cIMQ' + lkt).toString()
+    let lks = md5('' + invoke_key + lkt).toString()
     $nobyda.get({
-      url: `https://jdjoy.jd.com/api/turncard/channel/detail?turnTableId=${tid}&invokeKey=JL1VTNRadM68cIMQ`,
+      url: `https://jdjoy.jd.com/api/turncard/channel/detail?turnTableId=${tid}&invokeKey=${invoke_key}`,
       headers: {
         Cookie: KEY,
         'lkt': lkt,
@@ -786,9 +790,9 @@ async function JDUserSign2(s, key, title, tid, acData) {
   return new Promise(resolve => {
     setTimeout(() => {
       let lkt = new Date().getTime()
-      let lks = md5('' + 'JL1VTNRadM68cIMQ' + lkt).toString()
+      let lks = md5('' + invoke_key + lkt).toString()
       const JDUrl = {
-        url: 'https://jdjoy.jd.com/api/turncard/channel/sign?invokeKey=JL1VTNRadM68cIMQ',
+        url: `https://jdjoy.jd.com/api/turncard/channel/sign?invokeKey=${invoke_key}`,
         headers: {
           Cookie: KEY,
           'lkt': lkt,

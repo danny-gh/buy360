@@ -55,7 +55,7 @@ let JD_API_HOST = 'https://jdjoy.jd.com/pet'
 if(process.env.JOY_HOST){
   JD_API_HOST = process.env.JOY_HOST
 }
-$.invokeKey = 'JL1VTNRadM68cIMQ'
+$.invokeKey = 'q8DNJdpcfRQ69gIx'
 try{
   let hConfig = require('./utils/HConfig.js')
   $.invokeKey = hConfig.invokeKey

@@ -30,7 +30,7 @@ const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 let nowTimes = new Date(new Date().getTime() + new Date().getTimezoneOffset()*60*1000 + 8*60*60*1000);
-let invoke_key = "JL1VTNRadM68cIMQ";
+let invoke_key = "q8DNJdpcfRQ69gIx";
 try{
   let hConfig = require('./utils/HConfig.js')
   invoke_key = hConfig.invokeKey

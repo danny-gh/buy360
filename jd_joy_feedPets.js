@@ -26,7 +26,7 @@ $.get = zooFaker.injectToRequest2($.get.bind($));
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
-let invoke_key = "JL1VTNRadM68cIMQ";
+let invoke_key = "q8DNJdpcfRQ69gIx";
 try{
     let hConfig = require('./utils/HConfig.js')
     invoke_key = hConfig.invokeKey

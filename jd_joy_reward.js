@@ -26,7 +26,7 @@ const $ = new Env('宠汪汪积分兑换奖品');
 const zooFaker = require('./utils/JDJRValidator_Pure');
 // $.get = zooFaker.injectToRequest2($.get.bind($));
 // $.post = zooFaker.injectToRequest2($.post.bind($));
-let invoke_key = "JL1VTNRadM68cIMQ";
+let invoke_key = "q8DNJdpcfRQ69gIx";
 try{
   let hConfig = require('./utils/HConfig.js')
   invoke_key = hConfig.invokeKey

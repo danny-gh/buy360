@@ -28,13 +28,15 @@ let shareCodes = [];
         $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
         $.index = i + 1;
         $.nickName = '';
-        var data = await requestApi('h5launch');
+
+        let data = await requestApi('h5launch', {"followShop":1,"random":random(000000, 999999),"log":"4817e3a2~8,~1wsv3ig","sceneid":"JLHBhPageh5"});
         if (data?.data?.result?.status == 1) {
-            console.log(`账号${$.index}`, 火爆)
+            console.log(`账号【${$.index}】`, 火爆)
             continue;
         }
-        console.log(`\n京东账号【${$.index}】${$.UserName}`);
-        data = await requestApi('h5activityIndex');
+
+        console.log(`\n账号【${$.index}】${$.UserName}`);
+        data = await requestApi('h5activityIndex', {"isjdapp":1});
         if (data?.data?.code == 20002) {
             console.log(`账号${$.index}`, 已达拆红包数量限制)
         }else if (data?.data?.code == 10002) {
@@ -46,7 +48,7 @@ let shareCodes = [];
         }
         await $.wait(2000)
     } 
-    await open();
+    await help();
 })()  .catch((e) => {
     $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
   })
@@ -54,7 +56,8 @@ let shareCodes = [];
     $.done();
   })
 
-async function open(){
+
+async function help(){
     let pool = await readShareCode();
     shareCodes = [...shareCodes, ...(pool.data)];
     console.log(`\n******开始助力: 先内部互助，再互助池******\n`);
@@ -64,7 +67,7 @@ async function open(){
       $.index = i + 1;
       $.nickName = '';
       for (let j = 0; j < shareCodes.length; j++){
-        let result = await requestApi('jinli_h5assist', {"redPacketId": shareCodes[j]})
+        let result = await requestApi('jinli_h5assist', {"redPacketId":shareCodes[j],"followShop":0,"random":random(000000, 999999),"log":"42588613~8,~0iuxyee","sceneid":"JLHBhPageh5"})
         console.log(`账号【${$.index}】 助力: ${shareCodes[j]}\n${result.data.result.statusDesc}\n`);
         if (result.data.result.status == 3) {break;}
         await $.wait(1500);
@@ -75,7 +78,7 @@ async function open(){
 function requestApi(functionId, body = {}) {
     return new Promise(resolve => {
         $.post({
-            url: `${JD_API_HOST}/api?appid=jd_mp_h5&functionId=${functionId}&loginType=2&client=jd_mp_h5&clientVersion=10.0.5&osVersion=AndroidOS&d_brand=Xiaomi&d_model=Xiaomi`,
+            url: `https://api.m.jd.com/api?appid=jinlihongbao&functionId=${functionId}&loginType=2&client=jinlihongbao&t=${gettimestamp()}&clientVersion=10.1.4&osVersion=-1`,
             headers: {
                 "Cookie": cookie,
                 "origin": "https://h5.m.jd.com",
@@ -114,6 +117,16 @@ function requireConfig() {
         console.log(`共${cookiesArr.length}个京东账号\n`)
         resolve()
     })
+}
+
+function gettimestamp() {
+  let time = new Date().getTime();
+  return `${time}`;
+}
+
+function random(min, max) {
+  let num = Math.floor(Math.random() * (max - min)) + min;
+  return `${num}`;
 }
 
 function submitCode(shareCode) {
