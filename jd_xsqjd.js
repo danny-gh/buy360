@@ -1,7 +1,7 @@
 /*
 * 活动：APP - 京东超市 - 限时抢京豆
 * 第一个CK助力作者，其他CK助力第一个CK
-cron 23 7,9 * * * https://raw.githubusercontent.com/star261/jd/main/scripts/jd_xsljd.js
+cron 23 7,9 * * * https://raw.githubusercontent.com/star261/jd/main/scripts/jd_xsqjd.js
 * */
 const $ = new Env('限时抢京豆');
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
@@ -21,7 +21,7 @@ if ($.isNode()) {
 let ownCode = {};
 let mainPin = '';
 let codeList = [];
-let autoCode = '';
+let autoCode = '',projectId = '',helpId = '';
 !(async () => {
     if (!cookiesArr[0]) {
         $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
@@ -102,7 +102,7 @@ async function main(ck){
     if(JSON.stringify(mainInfo) === '{}'){console.log(`${userName},初始化失败`);return;}
     console.log(`${userName},初始化成功`);
     let taskInfoList = mainInfo.taskInfoList;
-    let projectId = mainInfo.projectId;
+    projectId = mainInfo.projectId;
     let userBoxInfoVoList = mainInfo.userBoxInfoVoList;
     for (let i = 0; i < taskInfoList.length; i++) {
         let oneTask = taskInfoList[i];
@@ -120,6 +120,9 @@ async function main(ck){
             codeList.push(oneTask.assistId);
             if(JSON.stringify(ownCode) === '{}' && mainPin === userName){
                 ownCode = {'user':userName,'projectId':projectId,'assignmentId':oneTask.assignmentId,"itemId":oneTask.assistId,'type':2}
+            }
+            if(!helpId){
+                helpId = oneTask.assignmentId;
             }
         }
         if(oneTask.type === '3' || oneTask.type === '6'){
@@ -178,7 +181,7 @@ async function takeRequest(functionId,body,ck){
                 }
             } catch (e) {
                 console.log(data);
-                $.logErr(e, resp)
+                //$.logErr(e, resp)
             } finally {
                 resolve(data.result || {});
             }

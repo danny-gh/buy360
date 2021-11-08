@@ -10,17 +10,17 @@
 ============Quantumultx===============
 [task_local]
 #京东极速版
-0 19 * * * jd_speed_sign.js, tag=京东极速版, img-url=https://raw.githubusercontent.com/Orz-3/task/master/jd.png, enabled=true
+0 3,6 * * * jd_speed_sign.js, tag=京东极速版, img-url=https://raw.githubusercontent.com/Orz-3/task/master/jd.png, enabled=true
 
 ================Loon==============
 [Script]
-cron "0 19 * * *" script-path=jd_speed_sign.js,tag=京东极速版
+cron "0 3,6 * * *" script-path=jd_speed_sign.js,tag=京东极速版
 
 ===============Surge=================
-京东极速版 = type=cron,cronexp="0 19 * * *",wake-system=1,timeout=33600,script-path=jd_speed_sign.js
+京东极速版 = type=cron,cronexp="0 3,6 * * *",wake-system=1,timeout=33600,script-path=jd_speed_sign.js
 
 ============小火箭=========
-京东极速版 = type=cron,script-path=jd_speed_sign.js, cronexpr="0 19 * * *", timeout=33600, enable=true
+京东极速版 = type=cron,script-path=jd_speed_sign.js, cronexpr="0 3,6 * * *", timeout=33600, enable=true
 */
 
 const $ = new Env('京东极速版');
@@ -83,20 +83,20 @@ async function jdGlobal() {
   try {
     await richManIndex()
 
-    await wheelsHome()
-    await apTaskList()
-    await wheelsHome()
+    // await wheelsHome()
+    // await apTaskList()
+    // await wheelsHome()
 
     await signInit()
-    await sign()
+    // await sign()
     await invite()
     await $.wait(1000)
     await invite2()
     await $.wait(1000)
-    $.score = 0
-    $.total = 0
-    await taskList()
-    await queryJoy()
+    // $.score = 0
+    // $.total = 0
+    // await taskList()
+    // await queryJoy()
     await signInit()
     await cash()
     await showMsg()
@@ -676,16 +676,31 @@ function taskGetUrl(function_id, body) {
 
 function invite2() {
   let t = +new Date()
-  let inviterId = ["a96OCbRRbeXixkMDj2uq6w==",
-][Math.floor((Math.random() * 1))]
-  // let inviterId = [
-  //   "a96OCbRRbeXixkMDj2uq6w==",
-  //   "MWvFNR+/AMsJ++oAkqu7oA==",
-  //   "mWqydRbzpFZXtQLW8sNi4w==",
-  //   "nXelBPJXOC7S+bpCanPwpg==",
-  //   "Ewo/ktC5uuFEV6NRDjEOuGN+ih64VaN6pr7ElX2B7qQ=",
-  //   "7VazsgDkMBeOHSxmTTHksg=="
-  // ][Math.floor((Math.random() * 6))]
+//   let inviterId = ["a96OCbRRbeXixkMDj2uq6w==",
+// ][Math.floor((Math.random() * 1))]
+  let inviterId = [
+    "a96OCbRRbeXixkMDj2uq6w==",
+    "MWvFNR+/AMsJ++oAkqu7oA==",
+    "iELfGhWPN4+qk6W8+9XflLqZAvuw65Su03th2p8LZ3s=",
+    "Ewo/ktC5uuFEV6NRDjEOuGN+ih64VaN6pr7ElX2B7qQ=",
+    "mWqydRbzpFZXtQLW8sNi4w==",
+    "WHOPxGHI5lHKJOXPcD9+6Q==",
+    "m0WX12woMy0LCKrikIOCvA==",
+    "on226vuYi7Q+ST7rHdHclg==",
+    "7VazsgDkMBeOHSxmTTHksg==",
+    "sRPKhdGZA5OvDLT3tJbmVx7hRm3dB2LVUbyU3AD3G84=",
+    "XckIfbn9Bti/8vMCb4/hxA==",
+    "JRApVe31I1a3pbY6PWR3Ug==",
+    "M+0VQW8GS+zNoKZYn1sz/qP1UfQwxYrjxf71ThzNACk=",
+    "LK8fgW9/PVVjkELGaMFppILytR7Sh7xK0R/e5dHmv2k=",
+    "wp4z/KBLdIs5u50rCL9YWDuR6siUKdPzqown6KlaTZc=",
+    "vnYEZJLL0kJkXW10neu11Q==",
+    "4nt9F3xRFD3fksDjaLkPKWNBQrAJMSOUKiqFVLo+o/o=",
+    "7hX64oby6aoRjobgL/LFKA==",
+    "BjQpbq2+v4T50/8YYehHw5oGe4H2vwaOeNsjeK/rSrk=",
+    "bG+W1LuefrhSJYV5iXS4JGL5kZiNXi2AturHhlpX5tA=",
+    "bSHg2t1EdBIyiJTd4rPOGCJHnSLMOu3HlW7vrog8qF8="
+  ][Math.floor((Math.random() * 21))]
   let headers = {
     'Host': 'api.m.jd.com',
     'accept': 'application/json, text/plain, */*',
@@ -712,16 +727,31 @@ function invite2() {
 function invite() {
   let t = +new Date()
 
-  let inviterId = ["a96OCbRRbeXixkMDj2uq6w==",
-][Math.floor((Math.random() * 1))]
-  // let inviterId = [
-  //   "a96OCbRRbeXixkMDj2uq6w==",
-  //   "MWvFNR+/AMsJ++oAkqu7oA==",
-  //   "mWqydRbzpFZXtQLW8sNi4w==",
-  //   "nXelBPJXOC7S+bpCanPwpg==",
-  //   "Ewo/ktC5uuFEV6NRDjEOuGN+ih64VaN6pr7ElX2B7qQ=",
-  //   "7VazsgDkMBeOHSxmTTHksg=="
-  // ][Math.floor((Math.random() * 6))]
+//   let inviterId = ["a96OCbRRbeXixkMDj2uq6w==",
+// ][Math.floor((Math.random() * 1))]
+let inviterId = [
+  "a96OCbRRbeXixkMDj2uq6w==",
+  "MWvFNR+/AMsJ++oAkqu7oA==",
+  "iELfGhWPN4+qk6W8+9XflLqZAvuw65Su03th2p8LZ3s=",
+  "Ewo/ktC5uuFEV6NRDjEOuGN+ih64VaN6pr7ElX2B7qQ=",
+  "mWqydRbzpFZXtQLW8sNi4w==",
+  "WHOPxGHI5lHKJOXPcD9+6Q==",
+  "m0WX12woMy0LCKrikIOCvA==",
+  "on226vuYi7Q+ST7rHdHclg==",
+  "7VazsgDkMBeOHSxmTTHksg==",
+  "sRPKhdGZA5OvDLT3tJbmVx7hRm3dB2LVUbyU3AD3G84=",
+  "XckIfbn9Bti/8vMCb4/hxA==",
+  "JRApVe31I1a3pbY6PWR3Ug==",
+  "M+0VQW8GS+zNoKZYn1sz/qP1UfQwxYrjxf71ThzNACk=",
+  "LK8fgW9/PVVjkELGaMFppILytR7Sh7xK0R/e5dHmv2k=",
+  "wp4z/KBLdIs5u50rCL9YWDuR6siUKdPzqown6KlaTZc=",
+  "vnYEZJLL0kJkXW10neu11Q==",
+  "4nt9F3xRFD3fksDjaLkPKWNBQrAJMSOUKiqFVLo+o/o=",
+  "7hX64oby6aoRjobgL/LFKA==",
+  "BjQpbq2+v4T50/8YYehHw5oGe4H2vwaOeNsjeK/rSrk=",
+  "bG+W1LuefrhSJYV5iXS4JGL5kZiNXi2AturHhlpX5tA=",
+  "bSHg2t1EdBIyiJTd4rPOGCJHnSLMOu3HlW7vrog8qF8="
+][Math.floor((Math.random() * 21))]
   var headers = {
     'Host': 'api.m.jd.com',
     'accept': 'application/json, text/plain, */*',

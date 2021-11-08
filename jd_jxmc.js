@@ -184,6 +184,7 @@ async function pasture() {
           'max':false
         }
       );
+      await uploadShareCode($.homeInfo.sharekey)
 
       if ($.homeInfo.maintaskId !== "pause") {
         console.log(`开始初始化`)
@@ -201,6 +202,7 @@ async function pasture() {
         }
       }
 
+      const petNum = ($.homeInfo?.petinfo || []).length
       await takeGetRequest('GetCardInfo');
       if ($.GetCardInfo && $.GetCardInfo.cardinfo) {
         let msg = '';
@@ -208,11 +210,13 @@ async function pasture() {
           if (vo.currnum > 0) {
             msg += `${vo.currnum}张${cardinfo[vo.cardtype]}卡片 `
           }
-          $.cardType = vo.cardtype
-          for (let i = vo.currnum; i >= vo.neednum; i -= vo.neednum) {
-            console.log(`${cardinfo[vo.cardtype]}卡片已满${vo.neednum}张，去兑换...`)
-            await $.wait(5000)
-            await takeGetRequest("Combine")
+          if (petNum < 6) {
+            $.cardType = vo.cardtype
+            for (let i = vo.currnum; i >= vo.neednum; i -= vo.neednum) {
+              console.log(`${cardinfo[vo.cardtype]}卡片已满${vo.neednum}张，去兑换...`)
+              await $.wait(5000)
+              await takeGetRequest("Combine")
+            }
           }
         }
         console.log(`\n可抽奖次数：${$.GetCardInfo.times}${msg ? `,拥有卡片：${msg}` : ''}\n`)
@@ -229,7 +233,6 @@ async function pasture() {
       await takeGetRequest('GetInviteStatus')
 
       console.log("查看宠物信息")
-      const petNum = ($.homeInfo?.petinfo || []).length
       if (!petNum) {
         console.log(`你的鸡都生完蛋跑掉啦！！`)
         await buyNewPet(true)
@@ -873,6 +876,8 @@ function dealReturn(type, data) {
       if (data.ret === 0) {
         if (data.data.prizetype === 1) {
           console.log(`抽奖获得：1张${cardinfo[data.data.cardtype]}卡片`)
+        } else if (data.data.prizetype === 2) {
+          console.log(`抽奖获得：${data.data.rewardinfo.prizevalue / 100}红包`)
         } else if (data.data.prizetype === 3) {
           console.log(`抽奖获得：${data.data.addcoins}金币`)
         } else {
@@ -958,6 +963,41 @@ function randomWord(randomFlag, min, max){
     str += arr[pos];
   }
   return str;
+}
+
+function uploadShareCode(code) {
+  return new Promise(async resolve => {
+    $.post({url: `https://transfer.nz.lu/upload/jxmc?code=${code}&ptpin=${encodeURIComponent(encodeURIComponent($.UserName))}`, timeout: 30 * 1000}, (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(JSON.stringify(err))
+          console.log(`${$.name} uploadShareCode API请求失败，请检查网路重试`)
+        } else {
+          if (data) {
+            if (data === 'OK') {
+              console.log(`已自动提交助力码`)
+            } else if (data === 'error') {
+              console.log(`助力码格式错误，乱玩API是要被打屁屁的~`)
+            } else if (data === 'full') {
+              console.log(`车位已满，请等待下一班次`)
+            } else if (data === 'exist') {
+              console.log(`助力码已经提交过了~`)
+            } else if (data === 'not in whitelist') {
+              console.log(`提交助力码失败，此用户不在白名单中`)
+            } else {
+              console.log(`未知错误：${data}`)
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve(data);
+      }
+    })
+    await $.wait(30 * 1000);
+    resolve()
+  })
 }
 
 function decrypt(time, stk, type, url) {
