@@ -110,7 +110,7 @@ const urlSchema = `openjd://virtual?params=%7B%20%22category%22:%20%22jump%22,%2
             console.log(`助力失败::${JSON.stringify($.helpResult)}`);
           }
           await $.wait(1000);
-          await inviteFriend(code);
+          await inviteFriend(inviteCodeList[k].code);
         }
       }
       if (helpSuccessPeoples && helpSuccessPeoples.length > 0) {
