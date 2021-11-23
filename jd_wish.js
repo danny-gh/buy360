@@ -25,9 +25,9 @@ let message = '', allMessage = '';
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '';
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
-let appIdArr = ['1E1NXxq0', '1FV1VwKc', '1FFRWxaY', '1FFVQyqw', '1FV1ZwKY', '1FFdSxqw'];
-let appNameArr = ['众筹许愿池', '惊喜大作战', '荣耀钞能力', '1111点心动', '好物好生活', '焕新带电生活'];
-let appId, appName, res;
+let appIdArr = ['1E1NXxq0', '1FFRWxaY', '1FFVQyqw', '1FFdSxqw'];
+let appNameArr = ['众筹许愿池', '荣耀钞能力', '1111点心动', '焕新带电生活'];
+let appId, appName;
 $.shareCode = [];
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
@@ -156,14 +156,17 @@ async function healthyDay_getHomeData(type = true) {
                     console.log(`签到`)
                     await harmony_collectScore({"appId":appId,"taskToken":vo.simpleRecordInfoVo.taskToken,"taskId":vo.taskId,"actionType":"0"}, vo.taskType)
                   } else if (vo.taskType === 1) {
+                    $.complete = false;
                     for (let key of Object.keys(vo.followShopVo)) {
                       let followShopVo = vo.followShopVo[key]
                       if (followShopVo.status !== 2) {
                         console.log(`【${followShopVo.shopName}】${vo.subTitleName}`)
                         await harmony_collectScore({"appId":appId,"taskToken":followShopVo.taskToken,"taskId":vo.taskId,"actionType":"0"})
+                        if ($.complete) break;
                       }
                     }
                   } else if (vo.taskType === 8) {
+                    $.complete = false;
                     for (let key of Object.keys(vo.productInfoVos)) {
                       let productInfoVos = vo.productInfoVos[key]
                       if (productInfoVos.status !== 2) {
@@ -171,6 +174,7 @@ async function healthyDay_getHomeData(type = true) {
                         await harmony_collectScore({"appId":appId,"taskToken":productInfoVos.taskToken,"taskId":vo.taskId,"actionType":"1"})
                         await $.wait(vo.waitDuration * 1000)
                         await harmony_collectScore({"appId":appId,"taskToken":productInfoVos.taskToken,"taskId":vo.taskId,"actionType":"0"})
+                        if ($.complete) break;
                       }
                     }
                   } else if (vo.taskType === 9 || vo.taskType === 26) {
@@ -183,6 +187,7 @@ async function healthyDay_getHomeData(type = true) {
                           await $.wait(vo.waitDuration * 1000)
                         }
                         await harmony_collectScore({"appId":appId,"taskToken":shoppingActivityVos.taskToken,"taskId":vo.taskId,"actionType":"0"})
+                        if ($.complete) break;
                       }
                     }
                   } else if (vo.taskType === 15) {
@@ -253,6 +258,7 @@ function harmony_collectScore(body = {}, taskType = '') {
                 if (data.data.bizCode === 103) $.delcode = true
               } else {
                 console.log(body.actionType === "0" ? `完成任务失败：${data.data.bizMsg}\n` : data.data.bizMsg)
+                if (data.data.bizMsg === "任务已完成") $.complete = true;
               }
             }
           }

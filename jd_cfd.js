@@ -304,7 +304,7 @@ function GetPropCardCenterInfo() {
           console.log(JSON.stringify(err))
           console.log(`${$.name} GetPropCardCenterInfo API请求失败，请检查网路重试`)
         } else {
-          data = JSON.parse(data);
+          data = JSON.parse(data.replace(/\n/g, "").match(new RegExp(/jsonpCBK.?\((.*);*\)/))[1]);
           if (data.iRet === 0) {
             console.log(`使用道具卡`)
             if (data.cardInfo.dwWorkingType === 0) {
@@ -317,7 +317,15 @@ function GetPropCardCenterInfo() {
                   break;
                 }
               }
-              if (!$.canuse) console.log(`无可用道具卡\n`)
+              for (let key of Object.keys(data.cardInfo.richcard)) {
+                let vo = data.cardInfo.richcard[key]
+                if (vo.dwCardNums > 0) {
+                  $.canuse = true;
+                  await UsePropCard(vo.strCardTypeIndex)
+                  break;
+                }
+              }
+              if (!$.canuse) console.log(`无可用道具卡`)
             } else {
               console.log(`有在使用中的道具卡，跳过使用\n`)
             }
@@ -340,12 +348,12 @@ function UsePropCard(strCardTypeIndex) {
           console.log(JSON.stringify(err))
           console.log(`${$.name} UsePropCard API请求失败，请检查网路重试`)
         } else {
-          data = JSON.parse(data);
+          data = JSON.parse(data.replace(/\n/g, "").match(new RegExp(/jsonpCBK.?\((.*);*\)/))[1]);
           if (data.iRet === 0) {
             let cardName = strCardTypeIndex.split("_")[1];
-            console.log(`使用道具卡【${cardName}】成功\n`)
+            console.log(`使用道具卡【${cardName}】成功`)
           } else {
-            console.log(`使用道具卡失败：${JSON.stringify(data)}\n`)
+            console.log(`使用道具卡失败：${JSON.stringify(data)}`)
           }
         }
       } catch (e) {
@@ -366,7 +374,7 @@ function TreasureHunt(strIndex) {
           console.log(`${JSON.stringify(err)}`)
           console.log(`${$.name} TreasureHunt API请求失败，请检查网路重试`)
         } else {
-          data = JSON.parse(data);
+          data = JSON.parse(data.replace(/\n/g, "").match(new RegExp(/jsonpCBK.?\((.*);*\)/))[1]);
           if (data.iRet === 0) {
             if (data.AwardInfo.dwAwardType === 0) {
               console.log(`${data.strAwardDesc}，获得 ${data.AwardInfo.ddwValue} 金币`)
@@ -1679,7 +1687,7 @@ function browserTask(taskType) {
             await $.wait(2000);
           }
           //领取奖励
-          await awardTask(0, taskinfo);
+          await awardTask(0, taskinfo,  "jxbfd");
         }
         break;
       case 1://成就任务
@@ -1726,13 +1734,13 @@ function doTask(taskId, type = 1) {
 }
 
 //领取奖励
-function awardTask(taskType, taskinfo) {
+function awardTask(taskType, taskinfo, bizCode = "jxbfd") {
   return new Promise((resolve) => {
     const {taskId, taskName} = taskinfo;
     const {ddwTaskId, strTaskName} = taskinfo;
     switch (taskType) {
       case 0://日常任务
-        $.get(taskListUrl(`Award`, `taskId=${taskId}`), (err, resp, data) => {
+        $.get(taskListUrl(`Award`, `taskId=${taskId}`, bizCode), (err, resp, data) => {
           try {
             if (err) {
               console.log(`${JSON.stringify(err)}`)

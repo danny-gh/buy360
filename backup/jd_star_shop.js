@@ -55,10 +55,12 @@ if ($.isNode()) {
         }
         await main();
     }
+    /*
     try{res = await getAuthorShareCode('https://raw.githubusercontent.com/he1pu/JDHelp/main/starShop.json');}catch (e) {}
     if(res && res.length > 0){
         $.authorCodeList = getRandomArrayElements(res,1)[0];
     }
+    */
     $.inviteCodeList.push(...getRandomArrayElements($.authorCodeList, 1));
     cookiesArr = getRandomArrayElements(cookiesArr,cookiesArr.length);
     for (let i = 0; i < cookiesArr.length; i++) {
