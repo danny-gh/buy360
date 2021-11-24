@@ -1552,7 +1552,7 @@ function getUserInfo(showInvite = true) {
             console.log(`财富岛好友互助码每次运行都变化,旧的当天有效`);
             console.log(`\n【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】${strMyShareId}`);
             $.shareCodes.push(strMyShareId)
-            submitCode(strMyShareId, $.UserName);
+            submitCode(strMyShareId, btoa($.UserName));
             await uploadShareCode(strMyShareId)
           }
           $.info = {
@@ -2004,7 +2004,7 @@ function submitCode(myInviteCode, user) {
 
 function uploadShareCode(code) {
   return new Promise(async resolve => {
-    $.post({url: `https://transfer.nz.lu/upload/cfd?code=${code}&ptpin=${encodeURIComponent(encodeURIComponent($.UserName))}`, timeout: 30 * 1000}, (err, resp, data) => {
+    $.post({url: `https://transfer.nz.lu/upload/cfd?code=${code}&ptpin=${encodeURIComponent(encodeURIComponent(btoa($.UserName)))}`, timeout: 30 * 1000}, (err, resp, data) => {
       try {
         if (err) {
           console.log(JSON.stringify(err))

@@ -68,6 +68,7 @@ let num;
       subTitle = '';
       option = {};
       //await shareCodesFormat();
+      const readShareCodeRes = await readShareCode();
       await jdPlantBean();
       await showMsg();
     }
