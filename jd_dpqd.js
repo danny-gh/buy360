@@ -21,32 +21,31 @@ const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 let cookiesArr = [], cookie = '', allMessage = '', message;
 const JD_API_HOST = 'https://api.m.jd.com/api?appid=interCenter_shopSign';
 
-let activityId = ''
-let vender = ''
-let num = 0
-let shopname = ''
-const token = [
-  "29EE68A6E519413D1F1D11A9D1C2A369",
-  "ADEDD9A07CA2F4E6D1061C816B50B4F9",
-  "B7D87C75333B8FA1DC0D0C40A189ECBE",
-  "26B3471491637BD5A0C44AB4FA5E9B95",
-  
-  "BBC4E2C8E162B972276277C42169184C",
-  "99BF71AC6AE9A83CA90B93491B588C60",
-  "F48EA929D68878F72B04D0F8A5A80947",
-  "8111EE06946DAB79472DFDF2A13C2DB9",
-  "2DACC15328D8879CEA26218677A47892",
-
-  "AB38A04AC48C09C7AF979031FA19E856",
-  "B8F8FFF58DB81AD6264A6911F1C00614",
-  "C6376C00D49B6DA6DA83F97AD7F758C6",
-  "29EE68A6E519413D1F1D11A9D1C2A369",
-  "3F9A11B4E318969C2567F899BCB4AFBE",
-
-  "2521C9BFEF0AAE544000BBCBF8F81AA1",
-  "12EFB12972022BEC95A96F45826BDAA0",
-  "FEE797596B0EBF0EF543EAC5BD7E4772"
-
+let activityId=''
+let vender=''
+let num=0
+let shopname=''
+const token = [	  	  	  
+  "B17B5001BE64C5BC517382C6D167EC45",
+  "46A656A5427BD312BDCABCB56C6D00AE",
+  "D0AD519DBC35A253CEC052FD041F2EFD",
+  "58764A4320B4EEA1E5A0E766531FAE6B",
+  "09B63A54599F85A17BACA9C81F50B1B8",
+  "E73DEE903C66B61BC75EDA2284B0E5FA",
+  "9389353F19EF5B26C068D995E2025AC7",
+  "4A5FF15FE2305E9396B7BA7CDB2DAFDD",
+  "2E584A3891BB67DEE1868288C94513A9",
+  "2E584A3891BB67DEE1868288C94513A9",
+  "7AE752825041B465232A623D8CACF821",
+  "21AFD1F995FF28A570C16E708DFD21DF",
+  "737646C9DCBCB867A041A86C90420986",
+  "C520A447B4D69659CD17CF1E1F7FCC40",
+  "C82DE74B42DB309CD78E3430806105C0",
+  "7CC5069E5C8102CCE296858306E2A3E9",
+  "31385084BAA286987012509203CF879B",
+  "48FB5FEDF4C51E9A988FD6051E3E653F",
+  "0BDBDBCE2D89D805E019ED00198347B8",
+  "985D16A2E4D7542048E251959E2E3C80"
 ]
 
 if ($.isNode()) {
@@ -222,7 +221,7 @@ function getActivityInfo(token,venderId) {
             mes += "签到"+level+"天,获得"+discount+'豆'
           }
           // console.log(message+mes+'\n')
-          message += mes+'\n'
+          // message += mes+'\n'
         }
       } catch (e) {
         $.logErr(e, resp);
@@ -301,8 +300,8 @@ function taskUrl(token,venderId) {
 
 async function showMsg() {
   if ($.isNode()) {
-    $.msg($.name, '', `****【京东账号${$.index}】${$.nickName}****\n${message}`);
-    allMessage += `****【京东账号${$.index}】${$.nickName}****\n${message}${$.index !== cookiesArr.length ? '\n\n' : ''}`;
+    $.msg($.name, '', `【京东账号${$.index}】${$.nickName}\n${message}`);
+    allMessage += `【京东账号${$.index}】${$.nickName}\n${message}${$.index !== cookiesArr.length ? '\n\n' : ''}`;
   }
 }
 

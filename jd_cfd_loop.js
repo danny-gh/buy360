@@ -93,7 +93,7 @@ async function querystorageroom() {
           console.log(`${JSON.stringify(err)}`)
           console.log(`${$.name} querystorageroom API请求失败，请检查网路重试`)
         } else {
-          data = JSON.parse(data);
+          data = JSON.parse(data.replace(/\n/g, "").match(new RegExp(/jsonpCBK.?\((.*);*\)/))[1]);
           console.log(`\n卖贝壳`)
           let bags = []
           for (let key of Object.keys(data.Data.Office)) {
@@ -132,7 +132,7 @@ function sellgoods(body) {
           console.log(`${JSON.stringify(err)}`)
           console.log(`${$.name} sellgoods API请求失败，请检查网路重试`)
         } else {
-          data = JSON.parse(data);
+          data = JSON.parse(data.replace(/\n/g, "").match(new RegExp(/jsonpCBK.?\((.*);*\)/))[1]);
           if (data.iRet === 0) {
             console.log(`贝壳出售成功：获得${data.Data.ddwCoin}金币 ${data.Data.ddwMoney}财富\n`)
           } else {
@@ -157,13 +157,15 @@ async function queryshell() {
           console.log(`${JSON.stringify(err)}`)
           console.log(`${$.name} queryshell API请求失败，请检查网路重试`)
         } else {
-          data = JSON.parse(data);
+          data = JSON.parse(data.replace(/\n/g, "").match(new RegExp(/jsonpCBK.?\((.*);*\)/))[1]);
+          $.canpick = true;
           for (let key of Object.keys(data.Data.NormShell)) {
             let vo = data.Data.NormShell[key]
-            for (let j = 0; j < vo.dwNum; j++) {
-              await $.wait(3000)
+            for (let j = 0; j < vo.dwNum && $.canpick; j++) {
               await pickshell(`dwType=${vo.dwType}`)
+              await $.wait(3000)
             }
+            if (!$.canpick) break
           }
           console.log('')
         }
@@ -183,7 +185,7 @@ async function pickshell(body) {
           console.log(`${JSON.stringify(err)}`)
           console.log(`${$.name} pickshell API请求失败，请检查网路重试`)
         } else {
-          data = JSON.parse(data);
+          data = JSON.parse(data.replace(/\n/g, "").match(new RegExp(/jsonpCBK.?\((.*);*\)/))[1]);
           let dwName
           switch (data.Data.strFirstDesc) {
             case '亲爱的岛主~♥七夕快乐鸭♥':
@@ -217,6 +219,7 @@ async function pickshell(body) {
             await $.wait(3000)
             await querystorageroom()
           } else {
+            $.canpick = false;
             console.log(`捡贝壳失败：${data.sErrMsg}`)
           }
         }
