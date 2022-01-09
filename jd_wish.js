@@ -172,7 +172,7 @@ async function healthyDay_getHomeData(type = true) {
                       if (productInfoVos.status !== 2) {
                         console.log(`【${productInfoVos.skuName}】${vo.subTitleName}`)
                         await harmony_collectScore({"appId":appId,"taskToken":productInfoVos.taskToken,"taskId":vo.taskId,"actionType":"1"})
-                        await $.wait(vo.waitDuration * 1000)
+                        await $.wait(vo.waitDuration * 1000 + 500)
                         await harmony_collectScore({"appId":appId,"taskToken":productInfoVos.taskToken,"taskId":vo.taskId,"actionType":"0"})
                         if ($.complete) break;
                       }
@@ -184,10 +184,18 @@ async function healthyDay_getHomeData(type = true) {
                         console.log(`【${shoppingActivityVos.title}】${vo.subTitleName}`)
                         if (vo.taskType === 9) {
                           await harmony_collectScore({"appId":appId,"taskToken":shoppingActivityVos.taskToken,"taskId":vo.taskId,"actionType":"1"})
-                          await $.wait(vo.waitDuration * 1000)
+                          await $.wait(vo.waitDuration * 1000 + 500)
                         }
                         await harmony_collectScore({"appId":appId,"taskToken":shoppingActivityVos.taskToken,"taskId":vo.taskId,"actionType":"0"})
                         if ($.complete) break;
+                      }
+                    }
+                  } else if (vo.taskType === 5) {
+                    for (let key of Object.keys(vo.browseShopVo)) {
+                      let browseShopVo = vo.browseShopVo[key]
+                      if (browseShopVo.status !== 2) {
+                        console.log(`【${browseShopVo.shopName}】${vo.subTitleName}`)
+                        await harmony_collectScore({"appId":appId,"taskToken":browseShopVo.taskToken,"taskId":vo.taskId,"actionType":"0"})
                       }
                     }
                   } else if (vo.taskType === 15) {
