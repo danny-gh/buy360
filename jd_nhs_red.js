@@ -1,6 +1,6 @@
 /*
 会场红包
-cron 0 0,22,12 * * * jd_nhs_red.js
+cron 0 0,23,12 * * * https://raw.githubusercontent.com/star261/jd/main/scripts/jd_nhs_red.js
 脚本可能会改名字来改cron,但环境变量不会改
 设置NHS_F为false禁用脚本,不受改名字影响
 FLCODE3为FL变量
@@ -11,7 +11,7 @@ if (process.env.NHS_F == 'false') {
 }
 const $ = new Env('会场红包');
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
-let flCode = ['JFjtav']
+let flCode = ['SdMRTcV','SwMfqje','SMMX6ek']
 flCode = flCode[Math.floor((Math.random() * flCode.length))]
 if ($.isNode() && process.env.FLCODE3) {
     flCode = process.env.FLCODE3
