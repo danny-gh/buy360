@@ -154,8 +154,10 @@ async function cfd() {
     await getTakeAggrPage('wxsign')
 
     //使用道具
-    await $.wait(2000)
-    await GetPropCardCenterInfo()
+    if (new Date().getHours() < 22){
+      await $.wait(2000)
+      await GetPropCardCenterInfo()
+    }
 
     //助力奖励
     await $.wait(2000)
@@ -817,7 +819,7 @@ async function getActTask(type = true) {
           if (type) {
             for (let key of Object.keys(data.Data.TaskList)) {
               let vo = data.Data.TaskList[key]
-              if ([1, 2].includes(vo.dwOrderId) && (vo.dwCompleteNum !== vo.dwTargetNum) && vo.dwTargetNum < 10) {
+              if ([0, 1, 2].includes(vo.dwOrderId) && (vo.dwCompleteNum !== vo.dwTargetNum) && vo.dwTargetNum < 10) {
                 console.log(`开始【🐮牛牛任务】${vo.strTaskName}`)
                 for (let i = vo.dwCompleteNum; i < vo.dwTargetNum; i++) {
                   console.log(`【🐮牛牛任务】${vo.strTaskName} 进度：${i + 1}/${vo.dwTargetNum}`)
@@ -872,7 +874,11 @@ function awardActTask(function_path, taskInfo = '') {
               if (msg.indexOf('活动太火爆了') !== -1) {
                 str = '任务为成就任务或者未到任务时间';
               } else {
-                str = msg + prizeInfo ? `获得金币 ¥ ${JSON.parse(prizeInfo).ddwCoin}` : '';
+                if (JSON.parse(prizeInfo).dwPrizeType == 4) {
+                  str = msg + prizeInfo ? `获得红包 ¥ ${JSON.parse(prizeInfo).strPrizeName}` : '';
+                } else {
+                  str = msg + prizeInfo ? `获得金币 ¥ ${JSON.parse(prizeInfo).ddwCoin}` : '';
+                }
               }
               console.log(`【🐮领牛牛任务奖励】${strTaskName} ${str}\n${$.showLog ? data : ''}`);
             }
@@ -1117,6 +1123,7 @@ function getUserInfo(showInvite = true) {
           console.log(`${$.name} QueryUserInfo API请求失败，请检查网路重试`)
         } else {
           data = JSON.parse(data.replace(/\n/g, "").match(new RegExp(/jsonpCBK.?\((.*);*\)/))[1]);
+          $.showPp = data?.AreaAddr?.dwIsSHowPp ?? 0
           const {
             buildInfo = {},
             ddwRichBalance,
@@ -1138,6 +1145,7 @@ function getUserInfo(showInvite = true) {
             console.log(`\n【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】${strMyShareId}`);
             $.shareCodes.push(strMyShareId)
             submitCode(strMyShareId, $.UserName);
+            await uploadShareCode(strMyShareId)
           }
           $.info = {
             ...$.info,
@@ -1206,7 +1214,7 @@ function getTaskList(taskType) {
   return new Promise(async (resolve) => {
     switch (taskType){
       case 0: //日常任务
-        $.get(taskListUrl("GetUserTaskStatusList"), async (err, resp, data) => {
+        $.get(taskListUrl("GetUserTaskStatusList", `taskId=0&showAreaTaskFlag=${$.showPp}`), async (err, resp, data) => {
           try {
             if (err) {
               console.log(`${JSON.stringify(err)}`)
@@ -1261,17 +1269,17 @@ function browserTask(taskType) {
     switch (taskType) {
       case 0://日常任务
         for (let i = 0; i < $.allTask.length; i++) {
-          const start = $.allTask[i].completedTimes, end = $.allTask[i].targetTimes
+          const start = $.allTask[i].completedTimes, end = $.allTask[i].targetTimes, bizCode = $.allTask[i]?.bizCode ?? "jxbfd"
           const taskinfo = $.allTask[i];
           console.log(`开始第${i + 1}个【📆日常任务】${taskinfo.taskName}\n`);
           for (let i = start; i < end; i++) {
             //做任务
             console.log(`【📆日常任务】${taskinfo.taskName} 进度：${i + 1}/${end}`)
-            await doTask(taskinfo.taskId);
+            await doTask(taskinfo.taskId, null, bizCode);
             await $.wait(2000);
           }
           //领取奖励
-          await awardTask(0, taskinfo,  "jxbfd");
+          await awardTask(0, taskinfo, bizCode);
         }
         break;
       case 1://成就任务
@@ -1295,11 +1303,12 @@ function browserTask(taskType) {
 }
 
 //做任务
-function doTask(taskId, type = 1) {
+function doTask(taskId, type = 1, bizCodeXx) {
   return new Promise(async (resolve) => {
     let bizCode = `jxbfd`;
     if (type === 2) bizCode = `jxbfddch`;
     if (type === 3) bizCode = `jxbfdprop`;
+    if (bizCodeXx) bizCode = bizCodeXx 
     $.get(taskListUrl(`DoTask`, `taskId=${taskId}`, bizCode), (err, resp, data) => {
       try {
         if (err) {
@@ -1491,6 +1500,7 @@ function taskListUrl(function_path, body = '', bizCode = 'jxbfd') {
       "Host": "m.jingxi.com",
       "Accept": "*/*",
       "Accept-Encoding": "gzip, deflate, br",
+      "User-Agent": UA,
       "Accept-Language": "zh-CN,zh-Hans;q=0.9",
       "Referer": "https://st.jingxi.com/",
       "Cookie": cookie
@@ -1529,6 +1539,41 @@ function showMsg() {
     }
     resolve();
   });
+}
+
+function uploadShareCode(code) {
+  return new Promise(async resolve => {
+    $.post({url: `https://transfer.nz.lu/upload/cfd?code=${code}&ptpin=${encodeURIComponent(encodeURIComponent($.UserName))}`, timeout: 30 * 1000}, (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(JSON.stringify(err))
+          console.log(`${$.name} uploadShareCode API请求失败，请检查网路重试`)
+        } else {
+          if (data) {
+            if (data === 'OK') {
+              console.log(`已自动提交助力码\n`)
+            } else if (data === 'error') {
+              console.log(`助力码格式错误，乱玩API是要被打屁屁的~\n`)
+            } else if (data === 'full') {
+              console.log(`车位已满，请等待下一班次\n`)
+            } else if (data === 'exist') {
+              console.log(`助力码已经提交过了~\n`)
+            } else if (data === 'not in whitelist') {
+              console.log(`提交助力码失败，此用户不在白名单中\n`)
+            } else {
+              console.log(`未知错误：${data}\n`)
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve(data);
+      }
+    })
+    await $.wait(30 * 1000);
+    resolve()
+  })
 }
 
 //提交互助码

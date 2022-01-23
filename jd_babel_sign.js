@@ -1,6 +1,7 @@
 /**
-通天塔签到共建,签到类cron自行设置.
+cron 0 0,3 * * * jd_babel_sign.js
 入口：主页-秒杀-狂撒三亿京豆
+TG频道：https://t.me/sheeplost
 */
 const $ = new Env('通天塔签到共建');
 const notify = $.isNode() ? require('./sendNotify') : '';
@@ -59,7 +60,9 @@ async function main() {
             let taskInfo = await task('doInteractiveAssignment', { "encryptProjectId": e.encryptProjectId, "encryptAssignmentId": e.encryptAssignmentId, "completionFlag": true, "itemId": "1", "sourceCode": "aceaceqingzhan" });
             if (taskInfo.code === "0" && taskInfo.subCode === "0") {
                 console.log(JSON.stringify(taskInfo.rewardsInfo.successRewards));
-            } else { console.log('没有获取到活动ID!') }
+            } else { console.log(JSON.stringify(taskInfo)) }
+        } else {
+            console.log('没有获取到活动ID')
         }
     } else { console.log('没有获取到活动信息！') };
 }

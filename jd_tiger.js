@@ -1,8 +1,9 @@
 /*
 萌虎摇摇乐
 https://yearfestival.jd.com
-优先内部互助,剩余次数助力作者
+优先内部互助,剩余次数助力作者和助力池
 0 0,12,18 * * * jd_tiger.js
+转义自HW大佬
 const $ = new Env('萌虎摇摇乐');
 */
 const name = '萌虎摇摇乐'
@@ -61,25 +62,29 @@ Object.keys(jdCookieNode).forEach((item) => {
         }
     }
     let authorCode = []
-    let res = await getAuthorShareCode()
-    if (res) {
-        authorCode = res.sort(() => 0.5 - Math.random())
-        const limit = 3
-        if (authorCode.length > limit) {
-            authorCode = authorCode.splice(0, limit)
-        }
-    }
+    // let res = await getAuthorShareCode('https://raw.githubusercontent.com/zero205/updateTeam/main/shareCodes/tiger.json')
+    // if (!res) {
+    //     res = await getAuthorShareCode('https://raw.fastgit.org/zero205/updateTeam/main/shareCodes/tiger.json')
+    // }
+    // if (res) {
+    //     authorCode = res.sort(() => 0.5 - Math.random())
+    //     const limit = 3
+    //     if (authorCode.length > limit) {
+    //         authorCode = authorCode.splice(0, limit)
+    //     }
+    // }
     for (let i = 0; i < cookiesArr.length; i++) {
         cookie = cookiesArr[i]
         const userName = decodeURIComponent(cookie.match(/pt_pin=(.+?);/) && cookie.match(/pt_pin=(.+?);/)[1])
-        const pool = []//await getShareCodePool('tiger', 5)
+        //const pool = await getShareCodePool('tiger', 5)
         // if (shareCodesHW.length === 0) {
         //     shareCodesHW = await getshareCodeHW('tiger')
         // }
         // index === 0 ?
         //     shareCodes = Array.from(new Set([...shareCodesHW, ...shareCodesSelf, ...temp])) :
         //     shareCodes = Array.from(new Set([...shareCodesSelf, ...shareCodesHW, ...temp]))
-        shareCodes = Array.from(new Set([...shareCodesSelf, ...authorCode, ...pool]))
+        //shareCodes = Array.from(new Set([...shareCodesSelf, ...authorCode, ...pool]))
+        shareCodes = Array.from(new Set([...shareCodesSelf]))
         // console.log(shareCodes)
         for (let code of shareCodes) {
             console.log(`账号${i + 1} 去助力 ${code} ${shareCodesSelf.includes(code) ? '(内部)' : ''}`)
@@ -122,7 +127,7 @@ Object.keys(jdCookieNode).forEach((item) => {
     console.log(`${name} finished}`)
 })
 
-async function getAuthorShareCode(url='https://raw.githubusercontent.com/he1pu/params/main/tiger.json') {
+async function getAuthorShareCode(url) {
     try {
         const options = {
             url,
@@ -180,7 +185,7 @@ async function getShareCodePool(key, num) {
     let shareCode = []
     for (let i = 0; i < 2; i++) {
         try {
-            const { body } = await got(``)
+            const { body } = await got(`https://api.jdsharecode.xyz/api/${key}/${num}`)
             console.debug('getShareCodePool:', body)
             shareCode = JSON.parse(body).data || []
             console.log(`随机获取${num}个${key}成功：${JSON.stringify(shareCode)}`)
