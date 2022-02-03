@@ -1,7 +1,7 @@
 /*
  * @Author: X1a0He
  * @Date: 2021-09-04 11:50:47
- * @LastEditTime: 2021-09-06 15:00:00
+ * @LastEditTime: 2021-11-10 22:30:00
  * @LastEditors: X1a0He
  * @Description: 批量取关京东店铺和商品
  * @Fixed: 不再支持Qx，仅支持Node.js
@@ -56,7 +56,16 @@ let args_xh = {
      * 可用环境变量控制：JD_UNSUB_INTERVAL，默认为3000毫秒
      * */
     unSubscribeInterval: process.env.JD_UNSUB_INTERVAL * 1 || 1000,
-    printLog: process.env.JD_UNSUB_PLOG || true
+    /*
+     * 是否打印日志
+     * 可用环境变量控制：JD_UNSUB_PLOG，默认为true
+     * */
+    printLog: process.env.JD_UNSUB_PLOG || true,
+    /*
+     * 失败次数，当取关商品或店铺时，如果连续 x 次失败，则结束本次取关，防止死循环
+     * 可用环境变量控制：JD_UNSUB_FAILTIMES，默认为3次
+     * */
+    failTimes: process.env.JD_UNSUB_FAILTIMES || 3
 }
 !(async() => {
     console.log('X1a0He留：运行前请看好脚本内的注释，日志已经很清楚了，有问题带着日志来问')
@@ -94,6 +103,7 @@ let args_xh = {
                 $.commIdList = ``;
                 $.shopIdList = ``;
                 $.endGoods = $.endShops = false;
+                $.failTimes = 0;
                 console.log(`=====京东账号${$.index} ${$.nickName || $.UserName}内部变量=====`)
                 console.log(`$.unsubscribeGoodsNum: ${$.unsubscribeGoodsNum}`)
                 console.log(`$.unsubscribeShopsNum: ${$.unsubscribeShopsNum}`)
@@ -101,6 +111,7 @@ let args_xh = {
                 console.log(`$.shopsTotalNum: ${$.shopsTotalNum}`)
                 console.log(`$.commIdList: ${$.commIdList}`)
                 console.log(`$.shopIdList: ${$.shopIdList}`)
+                console.log(`$.failTimes: ${$.failTimes}`)
                 console.log(`================`)
                 await favCommQueryFilter(); //获取商品并过滤
                 await $.wait(1000)
@@ -136,6 +147,10 @@ let args_xh = {
                             }
                         }
                     }
+                    if($.failTimes >= args_xh.failTimes){
+                        console.log('失败次数到达设定值，触发防死循环机制，该帐号已跳过');
+                        break;
+                    }
                 } while(true)
                 await showMsg_xh();
             }
@@ -161,6 +176,7 @@ function requireConfig(){
             console.log(`shopKeyWords: ${typeof args_xh.shopKeyWords}, ${args_xh.shopKeyWords}`)
             console.log(`unSubscribeInterval: ${typeof args_xh.unSubscribeInterval}, ${args_xh.unSubscribeInterval}`)
             console.log(`printLog: ${typeof args_xh.printLog}, ${args_xh.printLog}`)
+            console.log(`failTimes: ${typeof args_xh.failTimes}, ${args_xh.failTimes}`)
             console.log('=======================')
         }
         resolve()
@@ -186,11 +202,10 @@ function favCommQueryFilter(){
     return new Promise((resolve) => {
         console.log('正在获取已关注的商品...')
         const option = {
-            url: `https://wq.jd.com/fav/comm/FavCommQueryFilter?cp=1&pageSize=${args_xh.goodPageSize}&sceneval=2`,
+            url: `https://wq.jd.com/fav/comm/FavCommQueryFilter?cp=1&pageSize=${args_xh.goodPageSize}&category=0&promote=0&cutPrice=0&coupon=0&stock=0&sceneval=2`,
             headers: {
-                "Connection": "keep-alive",
                 "Cookie": cookie,
-                "User-Agent": "jdapp;JD4iPhone/167724 (iPhone; iOS 15.0; Scale/3.00)",
+                "User-Agent": "jdapp;iPhone;10.3.4;;;M/5.0;appBuild/167945;jdSupportDarkMode/1;;;Mozilla/5.0 (iPhone; CPU iPhone OS 15_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1;",
                 "Referer": "https://wqs.jd.com/"
             },
         }
@@ -230,16 +245,20 @@ function favCommBatchDel(){
         const option = {
             url: `https://wq.jd.com/fav/comm/FavCommBatchDel?commId=${$.commIdList}&sceneval=2&g_login_type=1`,
             headers: {
-                "Connection": "keep-alive",
                 "Cookie": cookie,
-                "User-Agent": "jdapp;JD4iPhone/167724 (iPhone; iOS 15.0; Scale/3.00)",
+                "User-Agent": "jdapp;iPhone;10.3.4;;;M/5.0;appBuild/167945;jdSupportDarkMode/1;;;Mozilla/5.0 (iPhone; CPU iPhone OS 15_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1;",
                 "Referer": "https://wqs.jd.com/"
             },
         }
         $.get(option, (err, resp, data) => {
             try{
                 data = JSON.parse(data);
-                data.iRet === "0" && data.errMsg === "success" ? console.log(`成功取消收藏商品：${$.unsubscribeGoodsNum}个\n`) : console.log(`批量取消收藏商品失败\n`, data)
+                if(data.iRet === "0" && data.errMsg === "success"){
+                    console.log(`成功取消收藏商品：${$.unsubscribeGoodsNum}个\n`)
+                    $.failTimes = 0;
+                } else {
+                    console.log(`批量取消收藏商品失败，失败次数：${++$.failTimes}\n`, data)
+                }
             } catch(e){
                 $.logErr(e, resp);
             } finally{
@@ -255,9 +274,8 @@ function queryShopFavList(){
         const option = {
             url: `https://wq.jd.com/fav/shop/QueryShopFavList?cp=1&pageSize=${args_xh.shopPageSize}&sceneval=2&g_login_type=1&callback=jsonpCBKA`,
             headers: {
-                "Connection": "keep-alive",
                 "Cookie": cookie,
-                "User-Agent": "jdapp;JD4iPhone/167724 (iPhone; iOS 15.0; Scale/3.00)",
+                "User-Agent": "jdapp;iPhone;10.3.4;;;M/5.0;appBuild/167945;jdSupportDarkMode/1;;;Mozilla/5.0 (iPhone; CPU iPhone OS 15_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1;",
                 "Referer": "https://wqs.jd.com/"
             },
         }
@@ -299,16 +317,20 @@ function batchunfollow(){
         const option = {
             url: `https://wq.jd.com/fav/shop/batchunfollow?shopId=${$.shopIdList}&sceneval=2&g_login_type=1`,
             headers: {
-                "Connection": "keep-alive",
                 "Cookie": cookie,
-                "User-Agent": "jdapp;JD4iPhone/167724 (iPhone; iOS 15.0; Scale/3.00)",
+                "User-Agent": "jdapp;iPhone;10.3.4;;;M/5.0;appBuild/167945;jdSupportDarkMode/1;;;Mozilla/5.0 (iPhone; CPU iPhone OS 15_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1;",
                 "Referer": "https://wqs.jd.com/"
             },
         }
         $.get(option, (err, resp, data) => {
             try{
                 data = JSON.parse(data);
-                data.iRet === "0" ? console.log(`已成功取消关注店铺：${$.unsubscribeShopsNum}个\n`) : console.log(`批量取消关注店铺失败\n`)
+                if(data.iRet === "0"){
+                    console.log(`已成功取消关注店铺：${$.unsubscribeShopsNum}个\n`)
+                    $.failTimes = 0;
+                } else {
+                    console.log(`批量取消关注店铺失败，失败次数：${++$.failTimes}\n`)
+                }
             } catch(e){
                 $.logErr(e, resp);
             } finally{
