@@ -26,6 +26,7 @@
     "tough-cookie": "^4.0.0",
     "tunnel": "0.0.6",
     "axios": "",
+    "moment": "",
     "ws": "^7.5.3",
     "jsdom": "^17.0.0"
   }
