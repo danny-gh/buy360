@@ -143,7 +143,8 @@ if "plant_cookie" in os.environ:
         printT ("已获取并使用Env环境plant_cookies")
 else:
     printT ("变量plant_cookie未填写")
-    exit (0)
+    cookies = os.environ["JD_COOKIE"].split ('&')
+#    exit (0)
 
 if "charge_targe_id" in os.environ:
     if len (os.environ["charge_targe_id"]) > 8:
@@ -153,6 +154,7 @@ if "charge_targe_id" in os.environ:
         charge_targe_id = os.environ["charge_targe_id"]
         printT (f"已获取并使用Env环境 charge_targe_id={charge_targe_id}")
 else:
+    charge_targe_ids = '11111&11111&11111&11111&11111&11111'.split ('&')
     printT("变量charge_targe_id未填写，无法充能")
 
 
@@ -325,17 +327,18 @@ def get_planted_info(cookies,sid,account):
     response = requests.get (url=url, verify=False, headers=headers)
     result = response.json ()
     # print(result)
-    planted_list = result['plant']
-    # print(planted_list)
-    for i in range (len (planted_list)):
-        try:
-            name = result['plant'][f'{i+1}']['data']['name']
-            planted_id = result['plant'][f'{i+1}']['data']['id']
-            print(f"账号{account}所种植的",f"【{name}】","充能ID为:",planted_id)
-            name_list.append(name)
-            planted_id_list.append(planted_id)
-        except Exception as e:
-            pass
+    if 'status_code' not in result:
+        planted_list = result['plant']
+        # print(planted_list)
+        for i in range (len (planted_list)):
+            try:
+                name = result['plant'][f'{i+1}']['data']['name']
+                planted_id = result['plant'][f'{i+1}']['data']['id']
+                print(f"账号{account}所种植的",f"【{name}】","充能ID为:",planted_id)
+                name_list.append(name)
+                planted_id_list.append(planted_id)
+            except Exception as e:
+                pass
 
 
 #获取早睡打卡

@@ -194,7 +194,7 @@ function dayWork() {
           if (item.prizeType === 2) {
             canTask.push(item);
           }
-          if (item.workType === 7 && item.prizeType === 0) {
+          if (item.workType === 6 && item.prizeType === 0 && item.prizeAmount === 500) {
             // missionId.push(item.mid);
             taskInfo.push(item);
           }
@@ -240,7 +240,7 @@ function dayWork() {
       }
     }
     for (let task of taskInfo) {
-      if (task.mid && task.workStatus === 0) {
+      if (task.mid && task.workStatus === -1) {
         console.log('开始做浏览任务');
         // yield setUserLinkStatus(task.mid);
         let aa = await setUserLinkStatus(task.mid);
@@ -518,6 +518,7 @@ function getSignAward() {
 
 // 浏览任务
 async function setUserLinkStatus(missionId) {
+  /*
   let index = 0;
   do {
     const params = {
@@ -551,6 +552,10 @@ async function setUserLinkStatus(missionId) {
     index++;
   } while (index < 7) //不知道结束的条件，目前写死循环7次吧
   console.log('浏览店铺任务结束');
+  */
+  let browseRet = await doBrowse(missionId);
+  console.log(`开始浏览任务：${JSON.stringify(browseRet)}`)
+  $.wait(15500);
   console.log('开始领取浏览后的奖励');
   let receiveAwardRes = await receiveAward(missionId);
   console.log(`领取浏览任务奖励成功：${JSON.stringify(receiveAwardRes)}`)
@@ -560,13 +565,47 @@ async function setUserLinkStatus(missionId) {
   // gen.next();
 }
 
+// 开始浏览任务
+function doBrowse(mid) {
+  if (!mid) return
+  mid = mid + "";
+  const params = {
+    "source": 0,
+    "workType": 6,
+    "opType": 4,
+    "mid": mid,
+    "riskDeviceParam": {
+      "eid": "",
+      "dt": "",
+      "ma": "",
+      "im": "",
+      "os": "",
+      "osv": "",
+      "ip": "",
+      "apid": "",
+      "ia": "",
+      "uu": "",
+      "cv": "",
+      "nt": "",
+      "at": "1",
+      "fp": "",
+      "token": ""
+    }
+  }
+  return new Promise((rs, rj) => {
+    request('doWork', params).then(response => {
+      rs(response);
+    })
+  })
+}
+
 // 领取浏览后的奖励
 function receiveAward(mid) {
   if (!mid) return
   mid = mid + "";
   const params = {
     "source": 0,
-    "workType": 7,
+    "workType": 6,
     "opType": 2,
     "mid": mid,
     "riskDeviceParam": {
@@ -812,14 +851,14 @@ function taskurl(function_id, body) {
     body: `reqData=${function_id === 'harvest' || function_id === 'login' || function_id === 'signIndex' || function_id === 'signOne' || function_id === 'setUserLinkStatus' || function_id === 'dayWork' || function_id === 'getSignAward' || function_id === 'sell' || function_id === 'friendRank' || function_id === 'friendTree' || function_id === 'stealFruit' ? encodeURIComponent(JSON.stringify(body)) : JSON.stringify(body)}`,
     headers: {
       'Accept': `application/json`,
-      'Origin': `https://uua.jr.jd.com`,
+      'Origin': `https://u.jr.jd.com`,
       'Accept-Encoding': `gzip, deflate, br`,
       'Cookie': cookie,
       'Content-Type': `application/x-www-form-urlencoded;charset=UTF-8`,
       'Host': `ms.jr.jd.com`,
       'Connection': `keep-alive`,
       'User-Agent': $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
-      'Referer': `https://uua.jr.jd.com/uc-fe-wxgrowing/moneytree/index`,
+      'Referer': `https://u.jr.jd.com/uc-fe-wxgrowing/moneytree/index`,
       'Accept-Language': `zh-cn`
     }
   }
