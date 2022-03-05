@@ -67,6 +67,7 @@ let tasks = [], shareCodes = [], first = true;
       await $.wait(1000);
 
       await main();
+      await $.wait(20000);
     }
   }
   if ($.isNode() && allMessage && $.ctrTemp) {
@@ -89,15 +90,15 @@ async function main() {
         await getShareCode(task_vos.assist_task_detail_vo.task_token)
         await $.wait(2000)
 
-        await getAssist()
-        await $.wait(2000)
+        //await getAssist()
+        //await $.wait(2000)
 
         console.log(`第${$.index}个账号${$.UserName}去助力第${Math.floor(($.index - 1) / 6) + 1}个账号。`)
         await doAssist()
         continue
-      case '去浏览精彩会场': case '去关注特色频道' :
-        product_info_vos = task_vos['shopping_activity_vos']
-        break
+      // case '去浏览精彩会场': case '去关注特色频道' :
+      //   product_info_vos = task_vos['shopping_activity_vos']
+      //   break
       case '去关注优质好店':
         product_info_vos = task_vos['follow_shop_vo']
         break
@@ -147,6 +148,7 @@ function getShareCode(token) {
 
 function doAssist() {
   return new Promise(resolve => {
+    console.log(`token=${shareCodes[Math.floor(($.index - 1) / 6)].tid}&inviter=${shareCodes[Math.floor(($.index - 1) / 6)].uid}`)
     $.post({
       url: 'https://xinruidddj-isv.isvjcloud.com/api/task/do_assist_task',
       headers: {
@@ -412,7 +414,7 @@ function get_produce_coins() {
       try {
         if (!err) {
           data = JSON.parse(data)
-          console.log("收币：", data)
+          //console.log("收币：", data)
           if (data.status === '0') {
             let coins = parseInt(data.body.coins)
             console.log(`收币成功：获得 ${coins}`)
