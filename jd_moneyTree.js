@@ -38,7 +38,8 @@ if ($.isNode()) {
 
 let jdNotify = false;//是否开启静默运行，默认false开启
 let sellFruit = true;//是否卖出金果得到金币，默认'true'卖金果
-const JD_API_HOST = 'https://ms.jr.jd.com/gw/generic/uc/h5/m';
+const UC_API_HOST = 'https://ms.jr.jd.com/gw/generic/uc/h5/m';
+const MISSION_API_HOST = 'https://ms.jr.jd.com/gw/generic/mission/h5/m';
 let userInfo = null, taskInfo = [], message = '', subTitle = '', fruitTotal = 0;
 !(async () => {
   if (!cookiesArr[0]) {
@@ -556,6 +557,11 @@ async function setUserLinkStatus(missionId) {
   let browseRet = await doBrowse(missionId);
   console.log(`开始浏览任务：${JSON.stringify(browseRet)}`)
   $.wait(15500);
+  let quaryRet = await queryMission(missionId);
+  console.log(`开始查询任务：${JSON.stringify(quaryRet)}`)
+  let finishRet = await finishMission(missionId);
+  console.log(`开始结束任务：${JSON.stringify(finishRet)}`)
+  $.wait(1000);
   console.log('开始领取浏览后的奖励');
   let receiveAwardRes = await receiveAward(missionId);
   console.log(`领取浏览任务奖励成功：${JSON.stringify(receiveAwardRes)}`)
@@ -598,6 +604,34 @@ function doBrowse(mid) {
     })
   })
 }
+
+function queryMission(mid) {
+  if (!mid) return
+  mid = mid + "";
+  const params = {
+    "missionId": mid
+  }
+  return new Promise((rs, rj) => {
+    request('queryMissionReceiveAfterStatus', params).then(response => {
+      rs(response);
+    })
+  })
+}
+
+function finishMission(mid) {
+  if (!mid) return
+  mid = mid + "";
+  const params = {
+    "missionId": mid
+  }
+  return new Promise((rs, rj) => {
+    request('finishReadMission', params).then(response => {
+      rs(response);
+    })
+  })
+}
+
+
 
 // 领取浏览后的奖励
 function receiveAward(mid) {
@@ -845,9 +879,34 @@ async function request(function_id, body = {}) {
   })
 }
 
+async function mission_request(function_id, params = {}) {
+  await $.wait(1000); //歇口气儿, 不然会报操作频繁
+  return new Promise((resolve, reject) => {
+    $.post(mission_taskurl(function_id, params), (err, resp, data) => {
+      try {
+        if (err) {
+          console.log("\n摇钱树京东API请求失败 ‼️‼️");
+          console.log(JSON.stringify(err));
+          $.logErr(err);
+        } else {
+          if (data) {
+            data = JSON.parse(data);
+          } else {
+            console.log(`京豆api返回数据为空，请检查自身原因`)
+          }
+        }
+      } catch (eor) {
+        $.msg("摇钱树-初始化个人信息" + eor.name + "‼️", JSON.stringify(eor), eor.message)
+      } finally {
+        resolve(data)
+      }
+    })
+  })
+}
+
 function taskurl(function_id, body) {
   return {
-    url: JD_API_HOST + '/' + function_id + '?_=' + new Date().getTime() * 1000,
+    url: UC_API_HOST + '/' + function_id + '?_=' + new Date().getTime() * 1000,
     body: `reqData=${function_id === 'harvest' || function_id === 'login' || function_id === 'signIndex' || function_id === 'signOne' || function_id === 'setUserLinkStatus' || function_id === 'dayWork' || function_id === 'getSignAward' || function_id === 'sell' || function_id === 'friendRank' || function_id === 'friendTree' || function_id === 'stealFruit' ? encodeURIComponent(JSON.stringify(body)) : JSON.stringify(body)}`,
     headers: {
       'Accept': `application/json`,
@@ -859,6 +918,25 @@ function taskurl(function_id, body) {
       'Connection': `keep-alive`,
       'User-Agent': $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
       'Referer': `https://u.jr.jd.com/uc-fe-wxgrowing/moneytree/index`,
+      'Accept-Language': `zh-cn`
+    }
+  }
+}
+
+function mission_taskurl(function_id, params) {
+  return {
+    url: UC_API_HOST + '/' + function_id + '?' + `reqData=${encodeURIComponent(JSON.stringify(params))}`,
+    body: ``,
+    headers: {
+      'Accept': `application/json`,
+      'Origin': `https://member.jr.jd.com`,
+      'Accept-Encoding': `gzip, deflate, br`,
+      'Cookie': cookie,
+      'Content-Type': `application/x-www-form-urlencoded;charset=UTF-8`,
+      'Host': `ms.jr.jd.com`,
+      'Connection': `keep-alive`,
+      'User-Agent': $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
+      'Referer': `https://member.jr.jd.com/`,
       'Accept-Language': `zh-cn`
     }
   }
