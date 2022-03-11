@@ -1,11 +1,12 @@
 /*
+TG https://t.me/duckjobs
 
 活动入口:京东汽车 - 右下角 - 领京豆
 游戏,不要问为什么分开😂
 
 一天3次
 
-10 5,9,14 * * * jd_mpdzcar_game.js
+10 6,10,12 * * * jd_mpdzcar_game.js
 */
 const $ = new Env('头文字J 游戏');
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
