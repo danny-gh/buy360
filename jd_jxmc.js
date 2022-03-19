@@ -285,6 +285,9 @@ async function pasture() {
         }
       }
     }
+    await $.wait(2000);
+    await cockShopping();
+    await $.wait(2000);
     $.taskList = [], $.dateType = ``, $.source = `jxmc`, $.bizCode = `jxmc`;
     for (let j = 2; j >= 0; j--) {
       if (j === 0) {
@@ -391,6 +394,23 @@ async function pasture() {
     }
   } catch (e) {
     $.logErr(e)
+  }
+}
+
+async function cockShopping() {
+  await takeGetRequest("GetCockShoppingInfo");
+  await $.wait(1000);
+  if($.GetCockShoppingInfo.status === 2 || $.GetCockShoppingInfo.status === 0){
+    $.commtype = 0;
+    await takeGetRequest("DrawShopping");
+    await $.wait(1000);
+    if($.commtype === 3){
+      await $.wait($.shoppingtime * 1000 + 500);
+      await takeGetRequest("DrawShopping");
+      await $.wait(1000);
+      await takeGetRequest("JoinShopping");
+      await $.wait(1000);
+    }
   }
 }
 
@@ -591,6 +611,23 @@ async function takeGetRequest(type) {
       url += `&_stk=${getStk(url)}`;
       url += `&_ste=1&h5st=${decrypt(Date.now(), '', '', url)}&_=${Date.now() + 2}&sceneval=2&g_login_type=1&callback=jsonpCBK${String.fromCharCode(Math.floor(Math.random() * 26) + "A".charCodeAt(0))}&g_ty=ls`;
       myRequest = getGetRequest(`DrawLoveHongBao`, url);
+      break;
+    case 'GetCockShoppingInfo':
+      url = `https://m.jingxi.com/jxmc/queryservice/GetCockShoppingInfo?channel=7&sceneid=1001&activeid=${$.activeid}&activekey=${$.activekey}&jxmc_jstoken=${token['farm_jstoken']}&timestamp=${token['timestamp']}&phoneid=${token['phoneid']}&_stk=activeid%2Cactivekey%2Cchannel%2Cjxmc_jstoken%2Cphoneid%2Csceneid%2Ctimestamp&_ste=1`
+      url += `&h5st=${decrypt(Date.now(), '', '', url)}&_=${Date.now() + 2}&sceneval=2&g_login_type=1&callback=jsonpCBK${String.fromCharCode(Math.floor(Math.random() * 26) + "A".charCodeAt(0))}&g_ty=ls`;
+      myRequest = getGetRequest(`GetCockShoppingInfo`, url);
+      break;
+    case 'DrawShopping':
+      url = `https://m.jingxi.com/jxmc/operservice/DrawShopping?channel=7&sceneid=1001&activeid=${$.activeid}&activekey=${$.activekey}&commtype=${$.commtype}&jxmc_jstoken=${token['farm_jstoken']}&timestamp=${token['timestamp']}&phoneid=${token['phoneid']}`;
+      url += `&_stk=${getStk(url)}`;
+      url += `&_ste=1&h5st=${decrypt(Date.now(), '', '', url)}&_=${Date.now() + 2}&sceneval=2&g_login_type=1&callback=jsonpCBK${String.fromCharCode(Math.floor(Math.random() * 26) + "A".charCodeAt(0))}&g_ty=ls`;
+      myRequest = getGetRequest(`DrawShopping`, url);
+      break;
+    case 'JoinShopping':
+      url = `https://m.jingxi.com/jxmc/operservice/JoinShopping?channel=7&sceneid=1001&activeid=${$.activeid}&activekey=${$.activekey}&jxmc_jstoken=${token['farm_jstoken']}&timestamp=${token['timestamp']}&phoneid=${token['phoneid']}&enrollflag=0`;
+      url += `&_stk=${getStk(url)}`;
+      url += `&_ste=1&h5st=${decrypt(Date.now(), '', '', url)}&_=${Date.now() + 2}&sceneval=2&g_login_type=1&callback=jsonpCBK${String.fromCharCode(Math.floor(Math.random() * 26) + "A".charCodeAt(0))}&g_ty=ls`;
+      myRequest = getGetRequest(`JoinShopping`, url);
       break;
     default:
       console.log(`错误${type}`);
@@ -830,6 +867,41 @@ function dealReturn(type, data) {
         console.log(`领取爱心奖励获得：${data.data.rewardinfo.prizevalue / 100}红包`)
       } else {
         console.log(`DrawLoveHongBao：${JSON.stringify(data)}`)
+      }
+      break;
+    case 'GetCockShoppingInfo':
+      data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
+      if (data.ret === 0) {
+        $.GetCockShoppingInfo = data.data;
+      }
+      break;
+    case 'DrawShopping':
+      data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
+      if (data.ret === 0) {
+        let drawShopping = data.data;
+        if(drawShopping.status === 999){
+          $.commtype = drawShopping.drawtype;
+          $.shoppingtime = drawShopping.time;
+        }else if(drawShopping.status === 4){
+          console.log(`公鸡购物奖励获得：${drawShopping.value}金币`)
+        }else{
+          console.log(`DrawShopping：${JSON.stringify(data)}`)
+        }
+      }else{
+        console.log(`DrawShopping：${JSON.stringify(data)}`)
+      }
+      break;
+    case 'JoinShopping':
+      data = JSON.parse(data.match(new RegExp(/jsonpCBK.?\((.*);*/))[1]);
+      if (data.ret === 0) {
+        let joinShopping = data.data;
+        if(joinShopping.status === 1){
+          console.log(`公鸡购物投入：${joinShopping.costvalue}金币`)
+        }else{
+          console.log(`JoinShopping：${JSON.stringify(data)}`)
+        }
+      }else{
+        console.log(`JoinShopping：${JSON.stringify(data)}`)
       }
       break;
     default:
