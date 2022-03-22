@@ -400,7 +400,7 @@ async function pasture() {
 async function cockShopping() {
   await takeGetRequest("GetCockShoppingInfo");
   await $.wait(1000);
-  if($.GetCockShoppingInfo.status === 2 || $.GetCockShoppingInfo.status === 0){
+  if($.GetCockShoppingInfo.status === 2){
     $.commtype = 0;
     await takeGetRequest("DrawShopping");
     await $.wait(1000);
@@ -411,6 +411,10 @@ async function cockShopping() {
       await takeGetRequest("JoinShopping");
       await $.wait(1000);
     }
+  }else if($.GetCockShoppingInfo.status === 0){
+      await takeGetRequest("JoinShopping");
+      await $.wait(1000);
+
   }
 }
 
