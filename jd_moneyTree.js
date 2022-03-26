@@ -556,12 +556,12 @@ async function setUserLinkStatus(missionId) {
   */
   let browseRet = await doBrowse(missionId);
   console.log(`开始浏览任务：${JSON.stringify(browseRet)}`)
-  $.wait(15500);
+  await $.wait(15500);
   let quaryRet = await queryMission(missionId);
   console.log(`开始查询任务：${JSON.stringify(quaryRet)}`)
   let finishRet = await finishMission(missionId);
   console.log(`开始结束任务：${JSON.stringify(finishRet)}`)
-  $.wait(1000);
+  await $.wait(1000);
   console.log('开始领取浏览后的奖励');
   let receiveAwardRes = await receiveAward(missionId);
   console.log(`领取浏览任务奖励成功：${JSON.stringify(receiveAwardRes)}`)

@@ -112,6 +112,7 @@ async function jdFactory() {
     if ($.newUser === 1) return
     await jdfactory_collectElectricity();//收集产生的电量
     await jdfactory_getTaskDetail();
+    await getLottery();
     await doTask();
     await algorithm();//投入电力逻辑
     await showMsg();
@@ -147,9 +148,11 @@ async function algorithm() {
               $.haveProduct = data.data.result.haveProduct;
               $.userName = data.data.result.userName;
               $.newUser = data.data.result.newUser;
+              $.singleChargeLimitScore = data.data.result.singleChargeLimitScore;
+              $.upperChargeTimes = data.data.result.upperChargeTimes;
               wantProduct = $.isNode() ? (process.env.FACTORAY_WANTPRODUCT_NAME ? process.env.FACTORAY_WANTPRODUCT_NAME : wantProduct) : ($.getdata('FACTORAY_WANTPRODUCT_NAME') ? $.getdata('FACTORAY_WANTPRODUCT_NAME') : wantProduct);
               if (data.data.result.factoryInfo) {
-                let { totalScore, useScore, produceScore, remainScore, couponCount, name } = data.data.result.factoryInfo
+                let { batteryCapacity, totalScore, useScore, produceScore, remainScore, couponCount, name } = data.data.result.factoryInfo
                 console.log(`\n已选商品：${name}`);
                 console.log(`当前已投入电量/所需电量：${useScore}/${totalScore}`);
                 console.log(`已选商品剩余量：${couponCount}`);
@@ -189,12 +192,18 @@ async function algorithm() {
                   if (((remainScore * 1 + useScore * 1) >= totalScore * 1 + 100000) && (couponCount * 1 > 0)) {
                     console.log(`\n所选商品${name}目前数量：${couponCount}，且当前总电量为：${remainScore * 1 + useScore * 1}，【满足】兑换此商品所需总电量：${totalScore}`);
                     console.log(`BoxJs或环境变量暂未提供心仪商品，下面为您目前选的${name} 发送提示通知\n`);
-                    // await jdfactory_addEnergy();
+                    for(let i=0; i<$.upperChargeTimes; i++){
+                      await jdfactory_addEnergy();
+                      await $.wait(1000);
+                    }
                     $.msg($.name, '', `京东账号${$.index}${$.nickName}\n您所选商品${name}目前数量：${couponCount}\n当前总电量为：${remainScore * 1 + useScore * 1}\n【满足】兑换此商品所需总电量：${totalScore}\n请点击弹窗直达活动页面查看`, {'open-url': 'openjd://virtual?params=%7B%20%22category%22:%20%22jump%22,%20%22des%22:%20%22m%22,%20%22url%22:%20%22https://h5.m.jd.com/babelDiy/Zeus/2uSsV2wHEkySvompfjB43nuKkcHp/index.html%22%20%7D'});
                     if ($.isNode()) await notify.sendNotify(`${$.name} - 账号${$.index} - ${$.nickName}`, `【京东账号${$.index}】${$.nickName}\n所选商品${name}目前数量：${couponCount}\n当前总电量为：${remainScore * 1 + useScore * 1}\n【满足】兑换此商品所需总电量：${totalScore}\n请速去活动页面查看`);
                   } else {
                     console.log(`\n所选商品${name}目前数量：${couponCount}，且当前总电量为：${remainScore * 1 + useScore * 1}，【不满足】兑换此商品所需总电量：${totalScore}`)
-                    console.log(`故不一次性投入电力，一直放到蓄电池累计\n`);
+                    if((batteryCapacity * 1 - remainScore * 1) <= $.singleChargeLimitScore){
+                      console.log(`蓄电池将满, 投入电力\n`);
+                      await jdfactory_addEnergy();
+                    }
                   }
                 }
               } else {
@@ -473,6 +482,66 @@ function jdfactory_addEnergy() {
       }
     })
   })
+}
+
+//抽奖
+function jdfactory_getLotteryResult() {
+  return new Promise(resolve => {
+    $.post(taskPostUrl("jdfactory_getLotteryResult"), async (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} API请求失败，请检查网路重试`)
+        } else {
+          if (safeGet(data)) {
+            data = JSON.parse(data);
+            if (data.data.bizCode === 0) {
+              let lotteryResult = data.data.result;
+              if(lotteryResult.lotteryReturnCode === "0"){
+                console.log(`成功抽到${JSON.stringify(lotteryResult.userAwardDto)}\n`);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve(data);
+      }
+    })
+  })
+}
+
+function jdfactory_getLotteryHomeData() {
+  return new Promise(resolve => {
+    $.post(taskPostUrl("jdfactory_getLotteryHomeData"), async (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} API请求失败，请检查网路重试`)
+        } else {
+          if (safeGet(data)) {
+            data = JSON.parse(data);
+            if (data.data.bizCode === 0) {
+              $.lotteryInfo = data.data.result.userInfo;
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve(data);
+      }
+    })
+  })
+}
+
+async function getLottery() {
+  await jdfactory_getLotteryHomeData();
+  await $.wait(1000);
+  if($.lotteryInfo.leftLotteryNum > 0){
+    jdfactory_getLotteryResult();
+  }
 }
 
 //收集电量

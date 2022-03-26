@@ -151,6 +151,25 @@ async function jdPlantBean() {
       }else if (submitCodeRes.code === 300) {
          console.log(`🥑种豆得豆-互助码已提交！🥑`);
       }
+
+      // ***************************
+      // 报告运行次数
+      $.get({
+        url: `https://cdn.nz.lu/api/runTimes?activityId=bean&sharecode=${$.myPlantUuid}`,
+        headers: {
+          'Host': 'api.jdsharecode.xyz'
+        },
+        timeout: 10000
+      }, (err, resp, data) => {
+        if (err) {
+          console.log('上报失败', err)
+        } else {
+          if (data === '1' || data === '0') {
+            console.log('上报成功')
+          }
+        }
+      })
+      // ***************************
       roundList = $.plantBeanIndexResult.data.roundList;
       currentRoundId = roundList[num].roundId;//本期的roundId
       lastRoundId = roundList[num - 1].roundId;//上期的roundId

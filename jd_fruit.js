@@ -305,6 +305,23 @@ async function doDailyTask() {
   } else {
     console.log('当前不在定时领水时间断或者已经领过\n')
   }
+  //去首页逛逛领京豆
+  if (!$.farmTask["treasureBoxInit-getBean"].f) {
+    //
+    await ddnc_getTreasureBoxAward(1);
+    if ($.treasureBoxAward.code === "0") {
+      await $.wait(1000);
+      await farmMarkStatus();
+      await $.wait(1000);
+      await ddnc_getTreasureBoxAward(2);
+      if ($.treasureBoxAward.code === "0") {
+        console.log(`【去首页逛逛领京豆】获得${$.treasureBoxAward.waterGram=3}g💧\n`);
+      }
+    } else {
+      console.log(`去首页逛逛领京豆结果:  ${JSON.stringify($.treasureBoxAward)}`);
+    }
+  }
+
   //给好友浇水
   if (!$.farmTask.waterFriendTaskInit.f) {
     if ($.farmTask.waterFriendTaskInit.waterFriendCountKey < $.farmTask.waterFriendTaskInit.waterFriendMax) {
@@ -354,10 +371,12 @@ async function doTenWater() {
   }
   await myCardInfoForFarm();
   const { fastCard, doubleCard, beanCard, signCard  } = $.myCardInfoRes;
+  /*
   if (`${jdFruitBeanCard}` === 'true' && JSON.stringify($.myCardInfoRes).match(`限时翻倍`) && beanCard > 0) {
     console.log(`您设置的是使用水滴换豆卡，且背包有水滴换豆卡${beanCard}张, 跳过10次浇水任务`)
     return
   }
+  */
   if ($.farmTask.totalWaterTaskInit.totalWaterTaskTimes < $.farmTask.totalWaterTaskInit.totalWaterTaskLimit) {
     console.log(`\n准备浇水十次`);
     let waterCount = 0;
@@ -1347,6 +1366,17 @@ async function taskInitForFarm() {
   const functionId = arguments.callee.name.toString();
   $.farmTask = await request(functionId, {"version":14,"channel":1,"babelChannel":"120"});
 }
+// 去首页逛逛“领京豆”
+async function ddnc_getTreasureBoxAward(type) {
+  console.log('\n去首页逛逛领京豆')
+  const functionId = arguments.callee.name.toString();
+  $.treasureBoxAward = await request(functionId, {"type":type,"babelChannel":"45","line":"getBean","version":15,"channel":1});
+}
+async function farmMarkStatus(type) {
+  const functionId = arguments.callee.name.toString();
+  $.farmMarkResult = await request(functionId, {"version":15,"channel":1,"babelChannel":"45"});
+}
+
 //获取好友列表API
 async function friendListInitForFarm() {
   $.friendList = await request('friendListInitForFarm', {"version": 4, "channel": 1});
