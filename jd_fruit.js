@@ -305,6 +305,7 @@ async function doDailyTask() {
   } else {
     console.log('当前不在定时领水时间断或者已经领过\n')
   }
+  /*
   //去首页逛逛领京豆
   if (!$.farmTask["treasureBoxInit-getBean"].f) {
     //
@@ -321,6 +322,7 @@ async function doDailyTask() {
       console.log(`去首页逛逛领京豆结果:  ${JSON.stringify($.treasureBoxAward)}`);
     }
   }
+  */
 
   //给好友浇水
   if (!$.farmTask.waterFriendTaskInit.f) {

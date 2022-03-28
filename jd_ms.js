@@ -262,7 +262,7 @@ function tttsign() {
 }
 function readpacksign() {
   return new Promise(resolve => {
-      body = 'uuid=88888&clientVersion=10.3.4&client=wh5&osVersion=&area=4_48201_54794_0&networkType=unknown&functionId=signRedPackage&body={"random":"23715587","log":"~1oji7rf","sceneid":"MShPageh5","ext":{"platform":"1","eid":"","referUrl":-1,"userAgent":-1}}&appid=SecKill2020'
+      body = 'uuid=1636541720202120746365.709.1648381608936&clientVersion=10.4.6&client=wh5&osVersion=&area=4_48201_54794_0&networkType=unknown&functionId=signRedPackage&body={"random":"08761905","log":"~1oji7rf","sceneid":"MShPageh5","ext":{"platform":"1","eid":"","referUrl":-1,"userAgent":-1}}&appid=SecKill2020'
     $.post(readpack(body), (err, resp, data) => {
     
       try {
