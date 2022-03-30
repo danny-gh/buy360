@@ -25,20 +25,20 @@ let vender=''
 let num=0
 let shopname=''
 const token = [
-  "A2EE985B40C39EA7FFE6ABDE307FDE25",
+  "E01FC9BC162CA899E77CA56D91F87752",
   "113946C00C676DD5141D46EF6194E281",
   "5DF1538FEA4A1A83CA5EF8C3B59DAE70",
   "5B4207AEC27389F094DB4596666C1151",
   "B6D45CBE79819E9EFE01E875B034AE02",
-  "0063F29C44A60AE95FAAF6070FD42CD9",
-  "4F2CF4B77EF54315023FF86FD51D6796",
+  "5C7C5EB47593FAFA562F2876249DF657",
+  "06531DBAB0102421286EF4248F7D0098",
   "D51F2DA5FC5A1BE968E4CA549FC80CF6",
-  "2C8E2649CEAC92BE81AA223FA2C02BEE",
+  "F28F320D6ACF02CFBF9F2718D76DDCDF",
   "5B1D130E0DFCF521ADA7FE70EEAED263",
   "9A1F7B49C553A588C559BC127ACD0F06",
-  "D96DE68ED11508B85AE0C3C748D1571E",
-  "B4EA5733FC01C1EE53E753269A1D2452",
-  "3C48746007ABF9EE73FFD6B4821A8461"
+  "27A88D6FC1C01776EE3941D7E6957641",
+  "8F1C4A41222D903AE8A9318A19A3CEBD",
+  "CDB260EE73B60D51DBA5948CBAD8DE5A"
 ]
 
 if ($.isNode()) {
@@ -80,8 +80,7 @@ if ($.isNode()) {
       }
       await dpqd()
       await showMsg()
-      await $.wait(30000);
-      console.log(`\n******结束30秒等待，继续下一账号*********\n`);
+      await $.wait(1500)
     }
   }
   if ($.isNode() && allMessage) {
@@ -100,6 +99,7 @@ async function dpqd(){
   for (var j = 0; j < token.length; j++) {
     num=j+1
     if (token[j]=='') {continue}
+    getUA()
     await getvenderId(token[j])
     if (vender=='') {continue}
     await getvenderName(vender)
@@ -120,7 +120,8 @@ function getvenderId(token) {
         "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
         "cookie": cookie,
         "referer": 'https://h5.m.jd.com/',
-        "User-Agent": `Mozilla/5.0 (Linux; U; Android 10; zh-cn; MI 8 Build/QKQ1.190828.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.5.40`
+        "User-Agent": $.UA
+        // "User-Agent": `Mozilla/5.0 (Linux; U; Android 10; zh-cn; MI 8 Build/QKQ1.190828.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.5.40`
       }
     }
     $.get(options, (err, resp, data) => {
@@ -158,7 +159,8 @@ function getvenderName(venderId) {
         "accept-encoding": "gzip, deflate, br",
         "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
         "cookie": cookie,
-        "User-Agent": `Mozilla/5.0 (Linux; U; Android 10; zh-cn; MI 8 Build/QKQ1.190828.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.5.40`
+        "User-Agent": $.UA
+        // "User-Agent": `Mozilla/5.0 (Linux; U; Android 10; zh-cn; MI 8 Build/QKQ1.190828.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.5.40`
       }
     }
     $.get(options, (err, resp, data) => {
@@ -194,7 +196,8 @@ function getActivityInfo(token,venderId) {
         "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
         "cookie": cookie,
         "referer": `https://h5.m.jd.com/babelDiy/Zeus/2PAAf74aG3D61qvfKUM5dxUssJQ9/index.html?token=${token}&sceneval=2&jxsid=16105853541009626903&cu=true&utm_source=kong&utm_medium=jingfen&utm_campaign=t_1001280291_&utm_term=fa3f8f38c56f44e2b4bfc2f37bce9713`,
-        "User-Agent": `Mozilla/5.0 (Linux; U; Android 10; zh-cn; MI 8 Build/QKQ1.190828.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.5.40`
+        "User-Agent": $.UA
+        // "User-Agent": `Mozilla/5.0 (Linux; U; Android 10; zh-cn; MI 8 Build/QKQ1.190828.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.5.40`
       }
     }
     $.get(options, (err, resp, data) => {
@@ -237,7 +240,8 @@ function signCollectGift(token,venderId,activitytemp) {
         "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
         "cookie": cookie,
         "referer": `https://h5.m.jd.com/babelDiy/Zeus/2PAAf74aG3D61qvfKUM5dxUssJQ9/index.html?token=${token}&sceneval=2&jxsid=16105853541009626903&cu=true&utm_source=kong&utm_medium=jingfen&utm_campaign=t_1001280291_&utm_term=fa3f8f38c56f44e2b4bfc2f37bce9713`,
-        "User-Agent": `Mozilla/5.0 (Linux; U; Android 10; zh-cn; MI 8 Build/QKQ1.190828.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.5.40`
+        "User-Agent": $.UA
+        // "User-Agent": `Mozilla/5.0 (Linux; U; Android 10; zh-cn; MI 8 Build/QKQ1.190828.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.5.40`
       }
     }
     $.get(options, (err, resp, data) => {
@@ -269,7 +273,8 @@ function taskUrl(token,venderId) {
         "accept-language": "zh-CN,zh;q=0.9",
         "cookie": cookie,
         "referer": `https://h5.m.jd.com/`,
-        "user-agent": `Mozilla/5.0 (Linux; U; Android 10; zh-cn; MI 8 Build/QKQ1.190828.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.5.40`
+        "User-Agent": $.UA
+        // "user-agent": `Mozilla/5.0 (Linux; U; Android 10; zh-cn; MI 8 Build/QKQ1.190828.002) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.5.40`
       }
     }
     $.get(options, (err, resp, data) => {
@@ -278,10 +283,10 @@ function taskUrl(token,venderId) {
           console.log(`\n${$.name}: API查询请求失败 ‼️‼️`)
           $.logErr(err);
         } else {
-            //console.log(data)
-            data = JSON.parse(/{(.*)}/g.exec(data)[0])
-            console.log(`已签到：`+data.data.days+`天`)
-            message +=`已签到：`+data.data.days+`天\n`
+          //console.log(data)
+          data = JSON.parse(/{(.*)}/g.exec(data)[0])
+          console.log(`已签到：`+data.data.days+`天`)
+          message +=`已签到：`+data.data.days+`天\n`
         }
       } catch (e) {
         $.logErr(e, resp);
@@ -354,6 +359,18 @@ function jsonParse(str) {
       return [];
     }
   }
+}
+
+function randomString(e) {
+  e = e || 32;
+  let t = "abcdef0123456789", a = t.length, n = "";
+  for (i = 0; i < e; i++)
+    n += t.charAt(Math.floor(Math.random() * a));
+  return n
+}
+
+function getUA() {
+  $.UA = `jdapp;iPhone;10.2.2;13.1.2;${randomString(40)};M/5.0;network/wifi;ADID/;model/iPhone8,1;addressid/2308460611;appBuild/167863;jdSupportDarkMode/0;Mozilla/5.0 (iPhone; CPU iPhone OS 13_1_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1;`
 }
 
 // prettier-ignore
