@@ -25,9 +25,9 @@ let message = '', allMessage = '';
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '';
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
-let appIdArr = ['1EFRQwA','1FFVQyqw','1E1xZy6s'];
-let appNameArr = ['疯狂砸金蛋','1111点心动','PLUS生活特权'];
-let appId, appName;
+let appIdArr = ['1EFBTxa6H','1FFVQyqw','1EFRWxKuG', '1E1xZy6s'];
+let appNameArr = ['森林历险记','1111点心动','许愿抽好礼', 'PLUS生活特权'];
+let appId, appName, res;
 $.shareCode = [];
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
@@ -149,6 +149,17 @@ async function healthyDay_getHomeData(type = true) {
           if (safeGet(data)) {
             data = JSON.parse(data);
             if (type) {
+               for (let key of Object.keys(data.data.result.hotTaskVos).reverse()) {
+                  let vo = data.data.result.hotTaskVos[key]  
+                  if (vo.status !== 2) {
+                  if (vo.taskType === 12) {
+                    console.log(`点击热区`)
+                    await harmony_collectScore({"appId":appId,"taskToken":vo.simpleRecordInfoVo.taskToken,"taskId":vo.taskId,"actionType":"0"}, vo.taskType)
+                  }     
+                  }else {
+                  console.log(`【${vo.taskName}】已完成\n`)
+                }
+               }
               for (let key of Object.keys(data.data.result.taskVos).reverse()) {
                 let vo = data.data.result.taskVos[key]
                 if (vo.status !== 2 && vo.status !== 0) {
@@ -252,7 +263,7 @@ function harmony_collectScore(body = {}, taskType = '') {
             if (data && data.data && data.data.bizCode === 0) {
               if (taskType === 13) {
                 console.log(`签到成功：获得${data.data.result.score}金币\n`)
-              } else if (body.taskId == 6) {
+              } else if (body.taskId == 5) {
                 console.log(`助力成功：您的好友获得${data.data.result.score}金币\n`)
               } else {
                 console.log(`完成任务：获得${data.data.result.score}金币\n`)
@@ -260,7 +271,7 @@ function harmony_collectScore(body = {}, taskType = '') {
             } else {
               if (taskType === 13) {
                 console.log(`签到失败：${data.data.bizMsg}\n`)
-              } else if (body.taskId == 6) {
+              } else if (body.taskId == 5) {
                 console.log(`助力失败：${data.data.bizMsg || data.msg}\n`)
                 if (data.code === -30001 || (data.data && data.data.bizCode === 108)) $.canHelp = false
                 if (data.data.bizCode === 103) $.delcode = true
