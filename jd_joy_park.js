@@ -34,6 +34,7 @@ const notify = $.isNode() ? require('./sendNotify') : '';
 let cookiesArr = [],
   cookie = '';
 let hotFlag = false;
+let failed_cnt = 0
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
     cookiesArr.push(jdCookieNode[item])
@@ -50,7 +51,7 @@ $.log(`最大化收益模式: 已${$.JOY_COIN_MAXIMIZE ? `默认开启` : `关�
 const JD_API_HOST = `https://api.m.jd.com/client.action`;
 message = ""
 !(async () => {
-  $.user_agent = require('./USER_AGENTS').USER_AGENT
+  //$.user_agent = require('./USER_AGENTS').USER_AGENT
   if (!cookiesArr[0]) {
     $.msg($.name, '【提示】请先获取cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/', {
       "open-url": "https://bean.m.jd.com/"
@@ -67,6 +68,8 @@ message = ""
     //   console.log(`\n汪汪乐园养joy 只运行 ${process.env.JOYPARK_JOY_START} 个Cookie\n`);
     //   break
     // }
+	hotFlag = false
+	failed_cnt = 0
     cookie = cookiesArr[i];
     if (cookie) {
         $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
@@ -74,6 +77,7 @@ message = ""
         $.isLogin = true;
         $.nickName = '';
         $.maxJoyCount = 10
+	  $.UA = `jdapp;iPhone;10.1.4;13.1.2;${randomString(40)};network/wifi;model/iPhone8,1;addressid/2308460611;appBuild/167814;jdSupportDarkMode/0;Mozilla/5.0 (iPhone; CPU iPhone OS 13_1_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1`
             await TotalBean();
         if (!$.isLogin) {
             $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/bean/signIndex.action`, {
@@ -98,13 +102,14 @@ message = ""
       //清理工位
       await doJoyMoveDownAll($.workJoyInfoList)
       //从低合到高
-	  try{	  
-		  await doJoyMergeAll($.activityJoyList)
-		  await getGameMyPrize()
+	  try{	
+      await doJoyMergeAll($.activityJoyList)
+      await getGameMyPrize()
 	  } catch (e) {
         $.logErr(e)
       }
 	  await $.wait(1500)
+    }
   }
 })()
   .catch((e) => $.logErr(e))
@@ -284,8 +289,8 @@ async function doJoyMergeAll(activityJoyList) {
   
   let fastBuyLevel = joyBaseInfo.fastBuyLevel
   if (joyMinLevelArr.length >= 2) {
-    $.log(`开始合成 ${minLevel} ${joyMinLevelArr[0].id} <=> ${joyMinLevelArr[1].id} 【限流严重，15秒后合成！如失败会重试】`);
-    await $.wait(15000)
+    $.log(`开始合成 ${minLevel} ${joyMinLevelArr[0].id} <=> ${joyMinLevelArr[1].id} 【限流严重，5秒后合成！如失败会重试】`);
+    await $.wait(5000)
     await doJoyMerge(joyMinLevelArr[0].id, joyMinLevelArr[1].id);
 	if (hotFlag) {
 	  joyBaseInfo = await getJoyBaseInfo();
@@ -353,7 +358,14 @@ function doJoyMerge(joyId1, joyId2) {
         } else {
           data = JSON.parse(data);
           $.log(`合成 ${joyId1} <=> ${joyId2} ${data.success ? `成功！` : `失败！【${data.errMsg}】 code=${data.code}`}`)
-          if (data.code == '1006') {
+          // if (data.code == '1006') {
+          //   hotFlag = true
+          // }
+		if (data.code == '1006') {
+          failed_cnt += 1
+          } 
+          if (failed_cnt == 5){
+            console.log('失败次数多，避免死循环，跳出！')
             hotFlag = true
           }
         }
@@ -506,7 +518,7 @@ function taskPostClientActionUrl(body, functionId) {
     url: `https://api.m.jd.com/client.action?${functionId ? `functionId=${functionId}` : ``}`,
     body: body,
     headers: {
-      'User-Agent': $.user_agent,
+      'User-Agent': $.UA,
       'Content-Type': 'application/x-www-form-urlencoded',
       'Host': 'api.m.jd.com',
       'Origin': 'https://joypark.jd.com',
@@ -521,7 +533,7 @@ function taskGetClientActionUrl(body, functionId) {
     url: `https://api.m.jd.com/client.action?functionId=${functionId}${body ? `&${body}` : ``}`,
     // body: body,
     headers: {
-      'User-Agent': $.user_agent,
+      'User-Agent': $.UA,
       'Content-Type': 'application/x-www-form-urlencoded',
       'Host': 'api.m.jd.com',
       'Origin': 'https://joypark.jd.com',
@@ -543,7 +555,7 @@ function TotalBean() {
         "Connection": "keep-alive",
         "Cookie": cookie,
         "Referer": "https://wqs.jd.com/my/jingdou/my.shtml?sceneval=2",
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 Mobile/15E148 Safari/604.1"
+        "User-Agent": $.UA
       }
     }
     $.post(options, (err, resp, data) => {
@@ -575,7 +587,13 @@ function TotalBean() {
     })
   })
 }
-
+function randomString(e) {
+  e = e || 32;
+  let t = "abcdef0123456789", a = t.length, n = "";
+  for (i = 0; i < e; i++)
+    n += t.charAt(Math.floor(Math.random() * a));
+  return n
+}
 function jsonParse(str) {
   if (typeof str == "string") {
     try {
