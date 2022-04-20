@@ -182,7 +182,7 @@ async function sendNotify(
   text,
   desp,
   params = {},
-  author = '\n\n本通知 By：https://github.com/he1pu/JDHelp',
+  author = '\n\n本通知 By：https://github.com/danny-gh/buy360.git',
 ) {
   //提供6种通知
   desp += author; //增加作者信息，防止被贩卖等
@@ -207,7 +207,50 @@ async function sendNotify(
     qywxamNotify(text, desp), //企业微信应用消息推送
     iGotNotify(text, desp, params), //iGot
     gobotNotify(text, desp),//go-cqhttp
+    qmsgNotify(text, desp),//qmsg
   ]);
+}
+
+function qmsgNotify(text, desp, time = 2100) {
+  return new Promise((resolve) => {
+    if (GOBOT_TOKEN) {
+      const options = {
+        url: `https://qmsg.zendee.cn:443/send/${GOBOT_TOKEN}`,
+        body: `qq:${GOBOT_QQ},msg:${text}\n${desp}`,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        timeout,
+      };
+      setTimeout(() => {
+        $.post(options, (err, resp, data) => {
+          try {
+            if (err) {
+              console.log('发送qmsg通知调用API失败！！\n');
+              console.log(err);
+            } else {
+              data = JSON.parse(data);
+              if (data.retcode === 0) {
+                console.log('qmsg发送通知消息成功🎉\n');
+              } else if (data.retcode === 100) {
+                console.log(`qmsg发送通知消息异常: ${data.errmsg}\n`);
+              } else {
+                console.log(
+                  `qmsg发送通知消息异常\n${JSON.stringify(data)}`,
+                );
+              }
+            }
+          } catch (e) {
+            $.logErr(e, resp);
+          } finally {
+            resolve(data);
+          }
+        });
+      }, time);
+    } else {
+      resolve();
+    }
+  });
 }
 
 function gobotNotify(text, desp, time = 2100) {
