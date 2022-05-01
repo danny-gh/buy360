@@ -1,6 +1,6 @@
 /*
 入口：
-https://prodev.m.jd.com/mall/active/2VyRHGE7jM1igBJcrjoB6ak1JJWV/index.html
+https://prodev.m.jd.com/mall/active/UNdjWfqFEQr4kwBHaNCA5EnjJCL/index.html#/
 
 27 0 * 9 * https://raw.githubusercontent.com/he1pu/JDHelp/main/jd_computer.js, tag=电脑配件, enabled=true
 */
@@ -33,7 +33,7 @@ $.outFlag = 0
     return;
   }
   MD5()
-  console.log(`入口:\nhttps://prodev.m.jd.com/mall/active/2VyRHGE7jM1igBJcrjoB6ak1JJWV/index.html`)
+  console.log(`入口:\nhttps://prodev.m.jd.com/mall/active/UNdjWfqFEQr4kwBHaNCA5EnjJCL/index.html#/`)
   for (let i = 0; i < cookiesArr.length; i++) {
     cookie = cookiesArr[i];
     if (cookie) {
@@ -103,9 +103,9 @@ async function run() {
 
 function indexInfo() {
   return new Promise(async resolve => {
-    let sign = getSign("/tzh/combination/indexInfo",{"activityId": 11})
+    let sign = getSign("/tzh/combination/indexInfo",{"activityId": 16})
     $.get({
-      url: `https://combination.m.jd.com/tzh/combination/indexInfo?activityId=11&t=${sign.timestamp}`,
+      url: `https://combination.m.jd.com/tzh/combination/indexInfo?activityId=16&t=${sign.timestamp}`,
       headers: {
         'Accept': 'application/json, text/plain, */*',
         'Content-Type':'application/json;charset=utf-8',
@@ -154,7 +154,7 @@ function doTask(type, id, taskId) {
     let sign = getSign(`/tzh/combination/${type}`,{"activityId": 11,"id":id,"taskId":taskId})
     $.post({
       url: `https://combination.m.jd.com/tzh/combination/${type}`,
-      body: `activityId=11&id=${id}&taskId=${taskId}&t=${sign.timestamp}`,
+      body: `activityId=16&id=${id}&taskId=${taskId}&t=${sign.timestamp}`,
       headers: {
         'Accept': 'application/json, text/plain, */*',
         "Accept-Language": "zh-cn",
@@ -208,10 +208,10 @@ function doTask(type, id, taskId) {
 function extraTaskPrize() {
   if($.outFlag != 0) return
   return new Promise(async resolve => {
-    let sign = getSign(`/tzh/combination/extraTaskPrize`,{"activityId": 11})
+    let sign = getSign(`/tzh/combination/extraTaskPrize`,{"activityId": 16})
     $.post({
       url: `https://combination.m.jd.com/tzh/combination/extraTaskPrize`,
-      body: `activityId=11&t=${sign.timestamp}`,
+      body: `activityId=16&t=${sign.timestamp}`,
       headers: {
         'Accept': 'application/json, text/plain, */*',
         "Accept-Language": "zh-cn",
