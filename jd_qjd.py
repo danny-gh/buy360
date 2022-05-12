@@ -195,8 +195,9 @@ class getJDCookie(object):
 
         # 检测cookie格式是否正确
     def getUserInfo(self, ck, pinName, userNum):
-        url = 'https://wq.jd.com/user_new/info/GetJDUserInfoUnion?orgFlag=JD_PinGou_New&callSource=mainorder'
+        url = 'https://me-api.jd.com/user_new/info/GetJDUserInfoUnion'
         headers = {
+            'Host': "me-api.jd.com",
             'Cookie': ck,
             'Referer': 'https://home.m.jd.com/myJd/home.action',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36',
