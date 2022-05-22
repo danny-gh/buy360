@@ -73,7 +73,7 @@ const JD_API_HOST = `https://api.m.jd.com/client.action`;
         }
         continue
       }
-      const readShareCodeRes = await readShareCode();
+      //const readShareCodeRes = await readShareCode();
       await collectShareCode()
     }
   }

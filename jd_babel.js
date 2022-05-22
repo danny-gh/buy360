@@ -8,6 +8,11 @@ const notify = $.isNode() ? require('./sendNotify') : '';
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '';
+const signTable = [
+  { "name": "plus会员店-天天领京豆",    "encryptProjectId": "3FCTNcsr7BoQUw7dx1h3KJ9Hi9yJ", "encryptAssigmentId": "3o2cWjTjZoCjKJcQwQ2bFgLkTnZC", "activity_id": "3joSPpr7RgdHMbcuqoRQ8HbcPo9U", "template_id": "00019605","floor_id": "" },
+  { "name": "智能生活-签到领京豆",      "encryptProjectId": "3fB6bXVqDZM9EJrzT2as3UJvdosb", "encryptAssigmentId": "hg1YHZEus5ZDhEfmSBJuQGEvtv5", "activity_id": "48UHoKFiX6tvpdRTjBah5SSnEAPc", "template_id": "19604", "floor_id": "76501279"},
+]
+
 let encryptProjectId = "3FCTNcsr7BoQUw7dx1h3KJ9Hi9yJ"
 let encryptAssigmentId = "3o2cWjTjZoCjKJcQwQ2bFgLkTnZC"
 if ($.isNode()) {
@@ -50,14 +55,71 @@ console.log("TG https://t.me/okyydsnb")
     }
 })().catch((e) => { $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '') }).finally(() => { $.done(); })
 
- async function main() {
-    let interactiveInfo = await task("queryInteractiveInfo", {"sourceCode": "acetttsign","encryptProjectId":`${encryptProjectId}`,"encryptAssigmentIds": [`${encryptAssigmentId}`],"ext":{"rewardEncryptAssignmentId":`${encryptAssigmentId}`,"timesEncryptAssignmentId":`${encryptAssigmentId}`,"needNum":50}})   
+async function main() {
+    for (let i of signTable) {
+        let interactiveInfo = await task("queryInteractiveInfo", {
+            "sourceCode": "acetttsign",
+            "encryptProjectId": `${i.encryptProjectId}`,
+            "encryptAssigmentIds": [`${i.encryptAssigmentId}`],
+            "ext": {
+                "rewardEncryptAssignmentId": `${i.encryptAssigmentId}`,
+                "timesEncryptAssignmentId": `${i.encryptAssigmentId}`,
+                "needNum": 50
+            }
+        });
+        if (interactiveInfo.login == true && interactiveInfo.hasRisk == false && interactiveInfo.code == "0" && interactiveInfo.subCode == "0") {
+            for (let assignment of interactiveInfo.assignmentList) {
+                if (assignment.completionFlag == false && assignment.userVerificationInfo.userQulification == true) {
+                    let interactiveResult = await task("doInteractiveAssignment", {
+                        "sourceCode": "acetttsign",
+                        "encryptProjectId": `${i.encryptProjectId}`,
+                        "encryptAssignmentId": `${i.encryptAssigmentId}`,
+                        "completionFlag": true,
+                        "itemId": `${assignment.ext.sign1.itemId}`,
+                        "extParam": { "sceneid": `babel_${i.activity_id}` },
+                        "activity_id": `${i.activity_id}`,
+                        "template_id": `${i.template_id}`,
+                        "floor_id": `${i.floor_id}`,
+                        "enc": ""
+                    });
+                    if (interactiveResult.code == "0" && interactiveResult.subCode == "0") {
+                        console.log(JSON.stringify(interactiveResult.rewardsInfo.successRewards))
+                    } else {
+                        console.log(JSON.stringify(interactiveResult));
+                    }
+
+                }
+            }
+        } else {
+            console.log(JSON.stringify(interactiveInfo));
+        }
+        await $.wait(2000)
+    }
+} 
+
+/*
+async function main() {
+    let interactiveInfo = await task("queryInteractiveInfo", {  "sourceCode": "acetttsign",
+                                                                "encryptProjectId":`${encryptProjectId}`,
+                                                                "encryptAssigmentIds": [`${encryptAssigmentId}`],
+                                                                "ext":{ "rewardEncryptAssignmentId":`${encryptAssigmentId}`,
+                                                                        "timesEncryptAssignmentId":`${encryptAssigmentId}`,
+                                                                        "needNum":50}});   
     if(interactiveInfo.login == true && interactiveInfo.hasRisk == false && interactiveInfo.code == "0" && interactiveInfo.subCode == "0"){
         for (let assignment of interactiveInfo.assignmentList) {
             if (assignment.completionFlag == false && assignment.userVerificationInfo.userQulification == true) {
-                let interactiveResult = await task("doInteractiveAssignment", { "sourceCode": "acetttsign", "encryptProjectId": `${encryptProjectId}`, "encryptAssignmentId": `${encryptAssigmentId}`, "completionFlag": true, "itemId": `${assignment.ext.sign1.itemId}`, "extParam":{"sceneid": "babel_3joSPpr7RgdHMbcuqoRQ8HbcPo9U"}, "activity_id": "3joSPpr7RgdHMbcuqoRQ8HbcPo9U","template_id": "00019605","floor_id": "","enc": ""})
+                let interactiveResult = await task("doInteractiveAssignment", { "sourceCode": "acetttsign", 
+                                                                                "encryptProjectId": `${encryptProjectId}`, 
+                                                                                "encryptAssignmentId": `${encryptAssigmentId}`, 
+                                                                                "completionFlag": true, 
+                                                                                "itemId": `${assignment.ext.sign1.itemId}`, 
+                                                                                "extParam":{"sceneid": "babel_3joSPpr7RgdHMbcuqoRQ8HbcPo9U"}, 
+                                                                                "activity_id": "3joSPpr7RgdHMbcuqoRQ8HbcPo9U",
+                                                                                "template_id": "00019605",
+                                                                                "floor_id": "",
+                                                                                "enc": ""});
                 if(interactiveResult.code == "0" && interactiveResult.subCode == "0"){
-                    console.log(JSON.stringify(interactiveResult.rewardsInfo))
+                    console.log(JSON.stringify(interactiveResult.rewardsInfo.successRewards))
                 }else{
                     console.log(JSON.stringify(interactiveResult));
                 }
@@ -69,6 +131,7 @@ console.log("TG https://t.me/okyydsnb")
     }
     await $.wait(2000)
 } 
+*/
 
 
 async function task(function_id, body) {
@@ -95,7 +158,7 @@ async function task(function_id, body) {
 function taskUrl(function_id, body) {
     return {
         url: `https://api.m.jd.com/client.action?functionId=${function_id}`,
-        body: `appid=babelh5&body=${encodeURIComponent(JSON.stringify(body))}&sign=11&t=1646265703723`,
+        body: `appid=babelh5&body=${encodeURIComponent(JSON.stringify(body))}&sign=11&t=${Date.now()}`,
         headers: {
             'Host': 'api.m.jd.com',
             'content-type': 'application/x-www-form-urlencoded',
