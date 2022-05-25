@@ -25,8 +25,8 @@ let message = '', allMessage = '';
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [], cookie = '';
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
-let appIdArr = ['1EFFSyqaC','1FFVQyqw','1EFRWxKuG', '1E1xZy6s'];
-let appNameArr = ['吃货嘉年华','1111点心动','许愿抽好礼', 'PLUS生活特权'];
+let appIdArr = ['1EFNVyqeH','1FFVQyqw','1EFRWxKuG', '1E1xZy6s'];
+let appNameArr = ['京东电器','1111点心动','许愿抽好礼', 'PLUS生活特权'];
 let appId, appName;
 $.shareCode = [];
 if ($.isNode()) {
@@ -152,7 +152,7 @@ async function healthyDay_getHomeData(type = true) {
                for (let key of Object.keys(data.data.result.hotTaskVos).reverse()) {
                   let vo = data.data.result.hotTaskVos[key]  
                   if (vo.status !== 2) {
-                  if (vo.taskType === 12) {
+                  if (vo.taskType === 13 || vo.taskType === 12) {
                     console.log(`点击热区`)
                     await harmony_collectScore({"appId":appId,"taskToken":vo.simpleRecordInfoVo.taskToken,"taskId":vo.taskId,"actionType":"0"}, vo.taskType)
                   }     
@@ -174,6 +174,30 @@ async function healthyDay_getHomeData(type = true) {
                         console.log(`【${followShopVo.shopName}】${vo.subTitleName}`)
                         await harmony_collectScore({"appId":appId,"taskToken":followShopVo.taskToken,"taskId":vo.taskId,"actionType":"0"})
                         if ($.complete) break;
+                      }
+                    }
+                  } else if (vo.taskType === 5) {
+                    for (let key of Object.keys(vo.browseShopVo)) {
+                      let browseShopVo = vo.browseShopVo[key]
+                      if (browseShopVo.status !== 2) {
+                        console.log(`【${browseShopVo.shopName}】${vo.subTitleName}`)
+                        await harmony_collectScore({"appId":appId,"taskToken":browseShopVo.taskToken,"taskId":vo.taskId,"actionType":"0"})
+                      }
+                    }
+                  } else if (vo.taskType === 15) {
+                    for (let key of Object.keys(vo.productInfoVos)) {
+                      let productInfoVos = vo.productInfoVos[key]
+                      if (productInfoVos.status !== 2) {
+                        console.log(`【${productInfoVos.skuName}】${vo.subTitleName}`)
+                        await harmony_collectScore({"appId":appId,"taskToken":productInfoVos.taskToken,"taskId":vo.taskId,"actionType":"0"})
+                      }
+                    }
+                  } else if (vo.taskType === 3) {
+					for (let key of Object.keys(vo.shoppingActivityVos)) {
+                      let shoppingActivityVos = vo.shoppingActivityVos[key]
+                      if (shoppingActivityVos.status !== 2) {
+                        console.log(`【${vo.subTitleName}】`)
+                        await harmony_collectScore({ "appId": appId, "taskToken": shoppingActivityVos.taskToken, "taskId": vo.taskId, "actionType": "0" })
                       }
                     }
                   } else if (vo.taskType === 8) {
@@ -199,22 +223,6 @@ async function healthyDay_getHomeData(type = true) {
                         }
                         await harmony_collectScore({"appId":appId,"taskToken":shoppingActivityVos.taskToken,"taskId":vo.taskId,"actionType":"0"})
                         if ($.complete) break;
-                      }
-                    }
-                  } else if (vo.taskType === 5) {
-                    for (let key of Object.keys(vo.browseShopVo)) {
-                      let browseShopVo = vo.browseShopVo[key]
-                      if (browseShopVo.status !== 2) {
-                        console.log(`【${browseShopVo.shopName}】${vo.subTitleName}`)
-                        await harmony_collectScore({"appId":appId,"taskToken":browseShopVo.taskToken,"taskId":vo.taskId,"actionType":"0"})
-                      }
-                    }
-                  } else if (vo.taskType === 15) {
-                    for (let key of Object.keys(vo.productInfoVos)) {
-                      let productInfoVos = vo.productInfoVos[key]
-                      if (productInfoVos.status !== 2) {
-                        console.log(`【${productInfoVos.skuName}】${vo.subTitleName}`)
-                        await harmony_collectScore({"appId":appId,"taskToken":productInfoVos.taskToken,"taskId":vo.taskId,"actionType":"0"})
                       }
                     }
                   } else if (vo.taskType === 21) {
