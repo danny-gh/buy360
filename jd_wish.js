@@ -271,7 +271,7 @@ function harmony_collectScore(body = {}, taskType = '') {
             if (data && data.data && data.data.bizCode === 0) {
               if (taskType === 13) {
                 console.log(`签到成功：获得${data.data.result.score}金币\n`)
-              } else if (body.taskId == 5) {
+              } else if (body.taskId == 6) {
                 console.log(`助力成功：您的好友获得${data.data.result.score}金币\n`)
               } else {
                 console.log(`完成任务：获得${data.data.result.score}金币\n`)
@@ -279,7 +279,7 @@ function harmony_collectScore(body = {}, taskType = '') {
             } else {
               if (taskType === 13) {
                 console.log(`签到失败：${data.data.bizMsg}\n`)
-              } else if (body.taskId == 5) {
+              } else if (body.taskId == 6) {
                 console.log(`助力失败：${data.data.bizMsg || data.msg}\n`)
                 if (data.code === -30001 || (data.data && data.data.bizCode === 108)) $.canHelp = false
                 if (data.data.bizCode === 103) $.delcode = true
@@ -315,7 +315,8 @@ function interact_template_getLotteryResult() {
               } else if (userAwardsCacheDto.type === 0) {
                 console.log(`很遗憾未中奖~`)
               } else {
-                console.log(JSON.stringify(data))
+                console.log(`抽中：${JSON.stringify(data)}`);
+                message += `抽中：${JSON.stringify(data)}\n`;
               }
             } else {
               $.canLottery = false
