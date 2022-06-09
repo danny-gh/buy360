@@ -3,14 +3,14 @@
 ============Quantumultx===============
 [task_local]
 #店铺签到
-15 2,14 * * * https://raw.githubusercontent.com/555555/faker2/main/jd_shop_sign.js, tag=店铺签到, enabled=true
+15 2,14 * * * https://raw.githubusercontent.com/444444/KR/main/jd_shop_sign.js, tag=店铺签到, enabled=true
 ===========Loon============
 [Script]
-cron "15 2,14 * * *" script-path=https://raw.githubusercontent.com/555555/faker2/main/jd_shop_sign.js,tag=店铺签到
+cron "15 2,14 * * *" script-path=https://raw.githubusercontent.com/444444/KR/main/jd_shop_sign.js,tag=店铺签到
 ============Surge=============
-店铺签到 = type=cron,cronexp="15 2,14 * * *",wake-system=1,timeout=3600,script-path=https://raw.githubusercontent.com/555555/faker2/main/jd_shop_sign.js
+店铺签到 = type=cron,cronexp="15 2,14 * * *",wake-system=1,timeout=3600,script-path=https://raw.githubusercontent.com/444444/KR/main/jd_shop_sign.js
 ===========小火箭========
-店铺签到 = type=cron,script-path=https://raw.githubusercontent.com/555555/faker2/main/jd_shop_sign.jss, cronexpr="15 2,14 * * *", timeout=3600, enable=true
+店铺签到 = type=cron,script-path=https://raw.githubusercontent.com/444444/KR/main/jd_shop_sign.jss, cronexpr="15 2,14 * * *", timeout=3600, enable=true
 */
 const $ = new Env('店铺签到');
 const notify = $.isNode() ? require('./sendNotify') : '';
@@ -25,18 +25,14 @@ let vender=''
 let num=0
 let shopname=''
 const token = [
-  "156E859B3A314171CA34B780C19CB215",
   "35BA76ED53A953E03F77EE5379C28BE5",
   "4BE1B58FE1360409A5967CAD1127B5A8",
-  "B30FC91ED327EE2E1C7C8B2214D8751A",
-  "3119848AE10A9E0858685099EB6C28CC",
-  "A7DDDEAE3438B27260BDC8B1A555CE6F",
+  "60454759577C6664C8AAAFEEBE25B7A1",
   "3B27B2B9E70249C339D66F27B7E133F0",
   "C031053EDBD2C047C072C53F80D82577",
-  "8E3DB8D17AD97471F53959CF2F2439FE",
-  "89425692E74B610F07E9783B75CA299B",
-  "98640F3DCA10BB955E8039117A1F819F",
-  "92E3956A3FAF71B6922B0AA8D9ED070A",
+  "572B5331C2303ABFF034700EDDFE2B41",
+  "979F3F329012E8BE0D64DA1B7D6F024B",
+  "3B864BF96848A44E170A26D2791E0AE3",
   "1C963AA3BBBD0396784BD0CA527BCDF8",
   "C5FD1482A207F2CC65570F8FBC492C9A",
   "5CF1A3455369BDB3D1153D9FC974CAFA",
@@ -44,14 +40,14 @@ const token = [
   "5B43A702C5CC14509CD8FB6F725326FC",
   "451389BCDC4E8B258DD3F21CDB827589",
   "57970BD464D679B43A7A0F5585F42677",
-  "21CEF5FF054814ADC61753FFFF417F03",
-  "A47418AED7F226A649E8886FCE2E02B3",
-  "65604889E08858A41E2DDB76D075C3BA",
-  "B7F1BE70638D6747223271745CB0D505",
-  "21CEF5FF054814ADC61753FFFF417F03",
-  "B6AF39DB2F83BEA76726BF0D71CCDDD8",
-  "9B57C79395931A570FB01264D48E9673",
+  "8029DFB0D9ADF5C6E96AF7D542B3E715",
+  "7C54AE28BAEDCBB8C927768AE71CA0EF",
+  "3B864BF96848A44E170A26D2791E0AE3",
   "4706B9DB78BBCC66BCB76862EB147AD2",
+  "F96D0FC8CC217B855988CA26E2A8BE74",
+  "809569E3816B2C76210BFF8DB3F2766E",
+  "21CEF5FF054814ADC61753FFFF417F03",
+	"3B864BF96848A44E170A26D2791E0AE3",
   "85B78F013645D1EC53D5F3974528654A"
 ]
 
