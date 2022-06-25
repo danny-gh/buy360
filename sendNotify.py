@@ -37,6 +37,7 @@ QYWX_KEY = ''                # 企业微信BOT
 PUSH_PLUS_TOKEN = ''        # 微信推送Plus+
 
 notify_mode = []
+
 message_info = ''''''
 
 # GitHub action运行需要填写对应的secrets

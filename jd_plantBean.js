@@ -229,7 +229,7 @@ async function doGetReward() {
 }
 async function doCultureBean() {
   await plantBeanIndex();
-  if ($.plantBeanIndexResult && $.plantBeanIndexResult.code === '0') {
+  if ($.plantBeanIndexResult && $.plantBeanIndexResult.code === '0' && $.plantBeanIndexResult.data) {
     const plantBeanRound = $.plantBeanIndexResult.data.roundList[num]
     if (plantBeanRound.roundState === '2') {
       //收取营养液
@@ -457,17 +457,16 @@ async function doTask() {
 function showTaskProcess() {
   return new Promise(async resolve => {
     await plantBeanIndex();
-    if ($.plantBeanIndexResult?.data?.taskList) {
-      $.taskList = $.plantBeanIndexResult.data.taskList;  
-    } else {
-      $.taskList = [];
-      console.log("未获取到任务")
-    }
-    if ($.taskList && $.taskList.length > 0) {
-      console.log("     任务   进度");
-      for (let item of $.taskList) {
-        console.log(`[${item["taskName"]}]  ${item["gainedNum"]}/${item["totalNum"]}   ${item["isFinished"]}`);
+    if ($.plantBeanIndexResult && $.plantBeanIndexResult.code === '0' && $.plantBeanIndexResult.data) {
+      $.taskList = $.plantBeanIndexResult.data.taskList;
+      if ($.taskList && $.taskList.length > 0) {
+        console.log("     任务   进度");
+        for (let item of $.taskList) {
+          console.log(`[${item["taskName"]}]  ${item["gainedNum"]}/${item["totalNum"]}   ${item["isFinished"]}`);
+        }
       }
+    } else {
+      console.log(`plantBeanIndexResult:${JSON.stringify($.plantBeanIndexResult)}`)
     }
     resolve()
   })
@@ -482,7 +481,7 @@ async function doHelp() {
       continue
     }
     await helpShare(plantUuid);
-    if ($.helpResult && $.helpResult.code === '0') {
+    if ($.helpResult && $.helpResult.code === '0'  && $.helpResult.data) {
       // console.log(`助力好友结果: ${JSON.stringify($.helpResult.data.helpShareRes)}`);
       if ($.helpResult.data.helpShareRes) {
         if ($.helpResult.data.helpShareRes.state === '1') {
@@ -602,7 +601,7 @@ async function plantShareSupportList() {
 }
 //助力好友的api
 async function helpShare(plantUuid) {
-  //console.log(`\n开始助力好友: ${plantUuid}`);
+  console.log(`\n开始助力好友: ${plantUuid}`);
   const body = {
     "plantUuid": plantUuid,
     "wxHeadImgUrl": "",

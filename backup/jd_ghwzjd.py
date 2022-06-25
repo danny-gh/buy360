@@ -68,6 +68,9 @@ cookie_list=Judge_env().main_run()
 
 
 ## 获取通知服务
+def msg(content):
+    print(content)
+
 class Msg(object):
     def getsendNotify(self, a=1):
         try:
@@ -107,7 +110,7 @@ class Msg(object):
                 return self.main(f)
             else:
                 print('获取通知服务失败，请检查网络连接...')
-Msg().main()   # 初始化通知服务   
+#Msg().main()   # 初始化通知服务   
 
 
 # 检查账号有效性

@@ -1,7 +1,7 @@
 /*
 * 38 8,18 * * * m_fanli.js
 * */
-const {Env} = require('./magic');
+const {Env} = require('./utils/magic');
 const $ = new Env('M饭粒任务');
 
 $.logic = async function () {
