@@ -307,20 +307,24 @@ async function doDailyTask() {
   }
   
   //去首页逛逛领京豆
-  if (!$.farmTask["treasureBoxInit-getBean"].f) {
-    //
-    await ddnc_getTreasureBoxAward(1);
-    if ($.treasureBoxAward.code === "0") {
-      await $.wait(1000);
-      await farmMarkStatus();
-      await $.wait(1000);
-      await ddnc_getTreasureBoxAward(2);
+  try {
+    if (!$.farmTask["treasureBoxInit-getBean"].f) {
+      //
+      await ddnc_getTreasureBoxAward(1);
       if ($.treasureBoxAward.code === "0") {
-        console.log(`【去首页逛逛领京豆】获得${$.treasureBoxAward.waterGram=3}g💧\n`);
+        await $.wait(1000);
+        await farmMarkStatus();
+        await $.wait(1000);
+        await ddnc_getTreasureBoxAward(2);
+        if ($.treasureBoxAward.code === "0") {
+          console.log(`【去首页逛逛领京豆】获得${$.treasureBoxAward.waterGram = 3}g💧\n`);
+        }
+      } else {
+        console.log(`去首页逛逛领京豆结果:  ${JSON.stringify($.treasureBoxAward)}`);
       }
-    } else {
-      console.log(`去首页逛逛领京豆结果:  ${JSON.stringify($.treasureBoxAward)}`);
     }
+  }catch(e){
+    console.log(e)
   }
   
 
