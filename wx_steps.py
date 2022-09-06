@@ -1,6 +1,6 @@
 '''
 cron: 1 19 * * *
-new Env('发财挖宝');
+new Env('微信步数');
 '''
 
 import requests, time, re, json, os
